@@ -30,6 +30,11 @@ const Register = () => {
             return;
         }
 
+        if (password !== cpassword) {
+            setErrormessage('Your passwords do not match');
+            return;
+        }
+
         axios.post(process.env.REACT_APP_API_ENDPOINT + '/register', {
             email,
             password,
@@ -41,6 +46,9 @@ const Register = () => {
                 }
                 else {
                     setSuccessmessage('Successfully created an account, redirecting to login page...');
+                    setTimeout(() => {
+                        history.push('/login');
+                    }, 1500);
                 }
             })
     }
