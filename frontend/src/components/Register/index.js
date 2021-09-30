@@ -1,7 +1,43 @@
 import styles from './Register.module.css';
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
+import { useState } from 'react';
+import axios from 'axios';
 
 const Register = () => {
+
+    const history = useHistory();
+
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [cpassword, setCpassword] = useState('');
+    const [companyname, setCompanyname] = useState('');
+
+    const handleForm = () => {
+        if (
+            email.length === 0 ||
+            password.length === 0 ||
+            cpassword.length === 0 ||
+            companyname.length === 0
+        ) {
+            alert('Please fill out the entire form');
+            return;
+        }
+
+        axios.post(process.env.REACT_APP_API_ENDPOINT + '/register', {
+            email,
+            password,
+            companyname
+        })
+            .then((res) => {
+                if (res.data.error) {
+
+                }
+                else {
+
+                }
+            })
+    }
+
     return (
         <div>
             <div className="container my-3">
@@ -10,20 +46,20 @@ const Register = () => {
                         <h3 className="card-title mb-3">Sign Up for RepTree</h3>
 
                         <label>Email Address</label>
-                        <input type="text" className="form-control form-control mb-3"></input>
+                        <input onChange={(e) => { setEmail(e.target.value) }} type="text" className="form-control form-control mb-3"></input>
 
                         <label>Password</label>
-                        <input type="text" className="form-control form-control mb-3"></input>
+                        <input onChange={(e) => { setPassword(e.target.value) }} type="password" className="form-control form-control mb-3"></input>
 
                         <label>Confirm Password</label>
-                        <input type="text" className="form-controller form-control mb-3"></input>
+                        <input onChange={(e) => { setCpassword(e.target.value) }} type="password" className="form-controller form-control mb-3"></input>
 
                         <label>Your Company's Name</label>
-                        <input type="text" className="form-controller form-control mb-3"></input>
+                        <input onChange={(e) => { setCompanyname(e.target.value) }} type="text" className="form-controller form-control mb-3"></input>
 
                         <div className="row">
                             <div className="col-6 col-lg-3 mb-3 mb-lg-0">
-                                <button className="btn btn-success">Create Account</button>
+                                <button onClick={handleForm} className="btn btn-success">Create Account</button>
                             </div>
                             <div className="col-6 col-lg-9 d-flex align-items-center">
                                 <Link to="/login" className="text-muted">Already have an account?</Link>
