@@ -74,6 +74,45 @@ app.post('/register', (req, res) => {
     });
 })
 
+app.post('/login', (req, res) => {
+    // Return json object with property "error", which will be either true or false
+
+    // Check if parameters were sent
+    if (
+        typeof req.body.email !== 'string' ||
+        typeof req.body.password !== 'string'
+    ) {
+        res.json({ error: true, message: 'Please provide an email and password' });
+        return;
+    }
+
+    // Check param lengths
+    if (
+        req.body.email.length === 0 ||
+        req.body.password.length === 0
+    ) {
+        res.json({ error: true, message: 'Email or password is too short.' });
+        return;
+    }
+
+    // Validate login
+    con.query('SELECT password, id FROM users WHERE email=?', [req.body.email], (err, results) => {
+        if (err) throw err;
+
+        if ((results.length === 0) || results[0].password !== req.body.password) {
+            // No user with that email found, or the password provided doesn't match
+            res.json({ error: true, message: 'Incorrect email or password' });
+            return;
+        }
+        else {
+            // Successful login
+            req.session.user_id = results[0].id;
+            res.json({ error: false });
+            return;
+        }
+    });
+})
+
 app.listen(8080, () => {
     console.log('RepTree API running on port 8080')
 });
