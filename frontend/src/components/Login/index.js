@@ -37,9 +37,6 @@ const Login = () => {
                 else {
                     setSuccessmessage('Successfully logged in, redirecting...');
 
-                    // Save logged in status to localStorage
-                    localStorage.setItem('logged_in', true);
-
                     setTimeout(() => {
                         history.push('/dashboard');
                     }, 1500);
