@@ -31,6 +31,49 @@ app.use(session({
 }));
 app.use(express.json());
 
+app.post('/register', (req, res) => {
+    // Return json object with property "error", which will be either true or false
+
+    // Check if parameters were sent
+    if (
+        typeof req.body.email !== 'string' ||
+        typeof req.body.password !== 'string' ||
+        typeof req.body.companyname !== 'string'
+    ) {
+        res.json({ error: true, message: 'Please provide an email, password, and company name' });
+        return;
+    }
+
+    // Check param lengths
+    if (
+        req.body.email.length === 0 ||
+        req.body.password.length === 0 ||
+        req.body.companyname.length === 0
+    ) {
+        res.json({ error: true, message: 'Email, password or company name is too short.' });
+        return;
+    }
+
+    // Does the provided email exist in the database?
+    con.query('SELECT COUNT(*) AS c FROM users WHERE email=?', [req.body.email], (err, results) => {
+        if (err) throw err;
+
+        if (results[0].c > 0) {
+            // User with this email address already exists
+            res.json({ error: true, message: 'User with that email address already exists' });
+            return;
+        }
+
+        // Provided email doesn't exist, create it
+        con.query('INSERT INTO users (email, password, companyname) VALUES (?, ?, ?)', [req.body.email, req.body.password, req.body.companyname], (err, results) => {
+            if (err) throw err;
+
+            res.json({ error: false });
+            return;
+        });
+    });
+})
+
 app.listen(8080, () => {
     console.log('RepTree API running on port 8080')
 });
