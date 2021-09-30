@@ -1,1 +1,10 @@
-/* No CSS *//*# sourceMappingURL=Dashboard.module.css.map */
+.nav {
+  height: 100vh;
+  width: 300px;
+  float: left;
+}
+
+.main {
+  height: 100vh;
+}
+/*# sourceMappingURL=Dashboard.module.css.map */
