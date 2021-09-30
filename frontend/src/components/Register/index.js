@@ -1,8 +1,38 @@
 import styles from './Register.module.css';
+import { Link } from 'react-router-dom';
 
 const Register = () => {
     return (
-        <div></div>
+        <div>
+            <div className="container my-3">
+                <div className="card">
+                    <div className="card-body">
+                        <h3 className="card-title mb-3">Sign Up for RepTree</h3>
+
+                        <label>Email Address</label>
+                        <input type="text" className="form-control form-control mb-3"></input>
+
+                        <label>Password</label>
+                        <input type="text" className="form-control form-control mb-3"></input>
+
+                        <label>Confirm Password</label>
+                        <input type="text" className="form-controller form-control mb-3"></input>
+
+                        <label>Your Company's Name</label>
+                        <input type="text" className="form-controller form-control mb-3"></input>
+
+                        <div className="row">
+                            <div className="col-6 col-lg-3 mb-3 mb-lg-0">
+                                <button className="btn btn-success">Create Account</button>
+                            </div>
+                            <div className="col-6 col-lg-9 d-flex align-items-center">
+                                <Link to="/login" className="text-muted">Already have an account?</Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
 
