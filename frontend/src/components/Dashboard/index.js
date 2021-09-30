@@ -1,5 +1,10 @@
-import { Link } from 'react-router-dom';
+import { Route, Link } from 'react-router-dom';
 import styles from './Dashboard.module.css';
+
+import CreateCustomer from './CreateCustomer';
+import MyBrand from './MyBrand';
+import Settings from './Settings';
+import AllCustomers from './AllCustomers';
 
 const Dashboard = () => {
     return (
@@ -7,26 +12,27 @@ const Dashboard = () => {
             <div className={`${styles.nav} d-flex flex-column navbar-dark bg-dark p-3`}>
                 <Link className="navbar-brand mb-3" to="/dashboard">RepTree</Link>
 
-                <ul class="nav nav-pills flex-column">
-                    <li class="nav-item">
-                        <Link to="/dashboard" class="nav-link active" aria-current="page"><i class="fas fa-signal"></i>Dashboard</Link>
-                    </li>
-                    <li className="nav-item">
-                        <Link to="/dashboard/all" class="nav-link text-white"><i class="fas fa-users"></i>All Customers</Link>
-                    </li>
-                    <li class="nav-item">
-                        <Link to="/dashboard/create-customer" class="nav-link text-white"><i class="far fa-plus-square"></i>Create Customer</Link>
-                    </li>
-                    <li class="nav-item">
-                        <Link to="/dashboard/my-brand" class="nav-link text-white"><i class="fas fa-star"></i>My Brand</Link>
-                    </li>
-                    <li class="nav-item">
-                        <Link to="/dashboard/settings" class="nav-link text-white"><i class="fas fa-cog"></i>Settings</Link>
-                    </li>
+                <ul className="nav nav-pills flex-column">
+                    <Link to="/dashboard" className="nav-link active" aria-current="page"><i className="fas fa-signal"></i>Dashboard</Link>
+                    <Link to="/dashboard/all" className="nav-link text-white"><i className="fas fa-users"></i>All Customers</Link>
+                    <Link to="/dashboard/create-customer" className="nav-link text-white"><i className="far fa-plus-square"></i>Create Customer</Link>
+                    <Link to="/dashboard/my-brand" className="nav-link text-white"><i className="fas fa-star"></i>My Brand</Link>
+                    <Link to="/dashboard/settings" className="nav-link text-white"><i className="fas fa-cog"></i>Settings</Link>
                 </ul>
             </div>
             <div className={styles.main}>
-
+                <Route path="/dashboard/all">
+                    <AllCustomers></AllCustomers>
+                </Route>
+                <Route path="/dashboard/create-customer">
+                    <CreateCustomer></CreateCustomer>
+                </Route>
+                <Route path="/dashboard/my-brand">
+                    <MyBrand></MyBrand>
+                </Route>
+                <Route path="/dashboard/settings">
+                    <Settings></Settings>
+                </Route>
             </div>
         </div>
     );
