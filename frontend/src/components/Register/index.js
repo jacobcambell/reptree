@@ -12,14 +12,21 @@ const Register = () => {
     const [cpassword, setCpassword] = useState('');
     const [companyname, setCompanyname] = useState('');
 
+    const [errormessage, setErrormessage] = useState(null);
+    const [successmessage, setSuccessmessage] = useState(null);
+
     const handleForm = () => {
+        // Clear messages at the start of every form submit
+        setErrormessage(null);
+        setSuccessmessage(null);
+
         if (
             email.length === 0 ||
             password.length === 0 ||
             cpassword.length === 0 ||
             companyname.length === 0
         ) {
-            alert('Please fill out the entire form');
+            setErrormessage('Please fill out the entire form');
             return;
         }
 
@@ -30,10 +37,10 @@ const Register = () => {
         })
             .then((res) => {
                 if (res.data.error) {
-
+                    setErrormessage(res.data.message);
                 }
                 else {
-
+                    setSuccessmessage('Successfully created an account, redirecting to login page...');
                 }
             })
     }
@@ -56,6 +63,19 @@ const Register = () => {
 
                         <label>Your Company's Name</label>
                         <input onChange={(e) => { setCompanyname(e.target.value) }} type="text" className="form-controller form-control mb-3"></input>
+
+                        {
+                            (errormessage !== null) &&
+                            <div className="alert alert-danger" role="alert">
+                                {errormessage}
+                            </div>
+                        }
+                        {
+                            (successmessage !== null) &&
+                            <div className="alert alert-success" role="alert">
+                                {successmessage}
+                            </div>
+                        }
 
                         <div className="row">
                             <div className="col-6 col-lg-3 mb-3 mb-lg-0">
