@@ -21,7 +21,7 @@ const Dashboard = () => {
                     <Link to="/dashboard/settings" className="nav-link text-white"><i className="fas fa-cog"></i>Settings</Link>
                 </ul>
             </div>
-            <div className={styles.main}>
+            <div className={`${styles.main} p-3`}>
                 <Route path="/dashboard/all">
                     <AllCustomers></AllCustomers>
                 </Route>

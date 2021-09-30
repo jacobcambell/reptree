@@ -52,10 +52,10 @@ const Login = () => {
                         <h3 className="card-title mb-3">Login</h3>
 
                         <label>Email Address</label>
-                        <input onChange={(e) => { setEmail(e.target.value) }} type="text" className="form-control form-control mb-3"></input>
+                        <input onChange={(e) => { setEmail(e.target.value) }} type="text" className="form-control mb-3"></input>
 
                         <label>Password</label>
-                        <input onChange={(e) => { setPassword(e.target.value) }} type="password" className="form-control form-control mb-3"></input>
+                        <input onChange={(e) => { setPassword(e.target.value) }} type="password" className="form-control mb-3"></input>
 
                         {
                             (errormessage !== null) &&

@@ -6,5 +6,7 @@
 
 .main {
   height: 100vh;
+  width: calc(100vw - 300px - 50px);
+  float: left;
 }
 /*# sourceMappingURL=Dashboard.module.css.map */

@@ -1,6 +1,8 @@
 const AllCustomers = () => {
     return (
-        <div></div>
+        <div>
+
+        </div>
     );
 }
 
