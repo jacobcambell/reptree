@@ -135,6 +135,16 @@ app.post('/create-customer', (req, res) => {
         return;
     }
 
+    // Name, phone and time should be more than 0 chars
+    if (
+        req.body.name.length === 0 ||
+        req.body.phone.length === 0 ||
+        req.body.time.length === 0
+    ) {
+        res.json({ error: true, message: 'Please enter a value in each field' });
+        return;
+    }
+
     // Create customer using the provided values
     con.query('INSERT INTO customers (name, phone, remind_time, reminder_sent) VALUES (?, ?, NOW() + INTERVAL ? HOUR, 0)', [req.body.name, req.body.phone, req.body.time], (err, results) => {
         if (err) throw err;
