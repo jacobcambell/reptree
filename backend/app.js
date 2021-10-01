@@ -159,13 +159,14 @@ app.post('/get-my-customers', (req, res) => {
     }
 
     // Grab all customers belonging to this user by their id
-    con.query('SELECT name, phone, TIMESTAMPDIFF(MINUTE, NOW(), remind_time) AS time, reminder_sent FROM customers WHERE owner_id=? ORDER BY create_time DESC', [req.session.user_id], (err, results) => {
+    con.query('SELECT id, name, phone, TIMESTAMPDIFF(MINUTE, NOW(), remind_time) AS time, reminder_sent FROM customers WHERE owner_id=? ORDER BY create_time DESC', [req.session.user_id], (err, results) => {
         if (err) throw err;
 
         let customers = [];
 
         for (let i = 0; i < results.length; i++) {
             customers.push({
+                id: results[i].id,
                 name: results[i].name,
                 phone: results[i].phone,
                 time: results[i].time,
@@ -174,6 +175,31 @@ app.post('/get-my-customers', (req, res) => {
         }
 
         res.json(customers);
+    });
+})
+
+app.post('/cancel-customer', (req, res) => {
+    // Check if the user is logged in
+    if (typeof req.session.user_id === 'undefined') {
+        res.json({ error: true, message: 'You must be logged in first' });
+        return;
+    }
+
+    // Check params
+    const check = [
+        req.body.id
+    ];
+
+    if (check.includes(undefined)) {
+        res.json({ error: true, message: 'Please include all the required values' });
+        return;
+    }
+
+    // Delete the customer from the database, if this user actually owns the id of the customer they sent
+    con.query('DELETE FROM customers WHERE id=? AND owner_id=?', [req.body.id, req.session.user_id], (err, results) => {
+        if (err) throw err;
+
+        res.json({ error: false, message: 'Deleted customer' });
     });
 })
 
