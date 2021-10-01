@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import { useHistory } from "react-router-dom";
 
 const CreateCustomer = () => {
 
@@ -7,14 +8,31 @@ const CreateCustomer = () => {
     const [phone, setPhone] = useState('');
     const [time, setTime] = useState(1);
 
+    const [successMsg, setSuccessMsg] = useState(null);
+    const [errorMsg, setErrorMsg] = useState(null);
+
+    const history = useHistory();
+
     const handleForm = () => {
+        setErrorMsg(null);
+        setSuccessMsg(null);
+
         axios.post(process.env.REACT_APP_API_ENDPOINT + '/create-customer', {
             name,
             phone,
             time
         }, { withCredentials: true })
             .then((res) => {
-                console.log(res.data)
+                if (res.data.error) {
+                    setErrorMsg(res.data.message);
+                }
+                else {
+                    setSuccessMsg(res.data.message);
+
+                    setTimeout(() => {
+                        history.push('/dashboard/all');
+                    }, 1500);
+                }
             })
     }
 
@@ -23,7 +41,7 @@ const CreateCustomer = () => {
             <h3>Create Customer</h3>
 
             <div className="row">
-                <div className="col col-lg-8">
+                <div className="col col-xl-8">
                     <label>Customer's Name</label>
                     <input onChange={(e) => { setName(e.target.value) }} type="text" className="form-control mb-3" />
 
@@ -42,6 +60,15 @@ const CreateCustomer = () => {
                     </div>
 
                     <button onClick={handleForm} className="btn btn-success my-3">Create Customer</button>
+
+                    {
+                        successMsg &&
+                        <div className="alert alert-success">{successMsg}</div>
+                    }
+                    {
+                        errorMsg &&
+                        <div className="alert alert-danger">{errorMsg}</div>
+                    }
                 </div>
             </div>
         </div>
