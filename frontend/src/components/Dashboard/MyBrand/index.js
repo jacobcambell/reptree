@@ -7,6 +7,21 @@ const MyBrand = () => {
     const [allNetworks, setAllNetworks] = useState(null);
 
     useEffect(() => {
+        updateList();
+    }, []);
+
+    const handleUse = (id) => {
+        // Note - currently we aren't asking the user for their link
+        axios.post(process.env.REACT_APP_API_ENDPOINT + '/use-network', {
+            id,
+            link: 'https://google.com'
+        }, { withCredentials: true })
+            .then(res => {
+                updateList();
+            })
+    }
+
+    const updateList = () => {
         // Grab all the review networks
         axios.post(process.env.REACT_APP_API_ENDPOINT + '/get-all-review-networks', {}, { withCredentials: true })
             .then(res => {
@@ -18,7 +33,7 @@ const MyBrand = () => {
             .then(res => {
                 setMyNetworks(res.data);
             })
-    }, []);
+    }
 
     return (
         <div>
@@ -40,7 +55,7 @@ const MyBrand = () => {
                         myNetworks &&
                         myNetworks.map((network) => (
                             <tr key={network.id}>
-                                <td className="align-middle"><img className="img-fluid img-thumbnail" src={network.icon} /></td>
+                                <td className="align-middle"><img className="img-fluid" src={network.icon} /></td>
                                 <td className="align-middle"><h5 className="fw-normal">{network.name}</h5></td>
                                 <td className="align-middle"><a href={network.link} target="_blank" className="btn btn-success bg-primary">Preview</a></td>
                                 <td className="align-middle"><button className="btn btn-danger">Remove</button></td>
@@ -65,9 +80,9 @@ const MyBrand = () => {
                         allNetworks &&
                         allNetworks.map((network) => (
                             <tr key={network.id}>
-                                <td className="align-middle"><img className="img-fluid img-thumbnail" src={network.icon} /></td>
+                                <td className="align-middle"><img className="img-fluid" src={network.icon} /></td>
                                 <td className="align-middle"><h5 className="fw-normal">{network.name}</h5></td>
-                                <td className="align-middle"><button className="btn btn-success bg-primary">Use {network.name}</button></td>
+                                <td className="align-middle"><button onClick={() => { handleUse(network.id) }} className="btn btn-success bg-primary">Use {network.name}</button></td>
                             </tr>
                         ))
                     }
