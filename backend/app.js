@@ -203,6 +203,31 @@ app.post('/cancel-customer', (req, res) => {
     });
 })
 
+app.post('/get-all-review-networks', (req, res) => {
+    // Check if the user is logged in
+    if (typeof req.session.user_id === 'undefined') {
+        res.json({ error: true, message: 'You must be logged in first' });
+        return;
+    }
+
+    // Get a list of all the review networks
+    con.query('SELECT id, name, icon FROM review_network_list', (err, results) => {
+        if (err) throw err;
+
+        let networks = [];
+
+        for (let i = 0; i < results.length; i++) {
+            networks.push({
+                id: results[i].id,
+                name: results[i].name,
+                icon: results[i].icon
+            });
+        }
+
+        res.json(networks);
+    });
+})
+
 app.listen(8080, () => {
     console.log('RepTree API running on port 8080')
 });
