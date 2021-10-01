@@ -136,7 +136,7 @@ app.post('/create-customer', (req, res) => {
     }
 
     // Create customer using the provided values
-    con.query('INSERT INTO customers (name, phone, remind_time, reminder_sent) VALUES (?, ?, NOW(), 0)', [req.body.name, req.body.phone], (err, results) => {
+    con.query('INSERT INTO customers (name, phone, remind_time, reminder_sent) VALUES (?, ?, NOW() + INTERVAL ? HOUR, 0)', [req.body.name, req.body.phone, req.body.time], (err, results) => {
         if (err) throw err;
 
         res.json({ error: false, message: 'Success' });
