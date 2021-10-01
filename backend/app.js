@@ -139,7 +139,7 @@ app.post('/create-customer', (req, res) => {
     con.query('INSERT INTO customers (name, phone, remind_time, reminder_sent) VALUES (?, ?, NOW() + INTERVAL ? HOUR, 0)', [req.body.name, req.body.phone, req.body.time], (err, results) => {
         if (err) throw err;
 
-        res.json({ error: false, message: 'Success' });
+        res.json({ error: false, message: 'Successfully created customer' });
         return;
     });
 
