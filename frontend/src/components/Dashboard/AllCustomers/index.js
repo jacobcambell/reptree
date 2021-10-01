@@ -7,13 +7,26 @@ const AllCustomers = () => {
     // name, phone, time, reminder_sent
     const [customers, setCustomers] = useState([]);
     useEffect(() => {
+        getCustomers();
+    }, []);
+
+    const handleCancel = (id) => {
+        axios.post(process.env.REACT_APP_API_ENDPOINT + '/cancel-customer', {
+            id
+        }, { withCredentials: true })
+            .then(res => {
+                getCustomers();
+            })
+    }
+
+    const getCustomers = () => {
         axios.post(process.env.REACT_APP_API_ENDPOINT + '/get-my-customers',
             {},
             { withCredentials: true })
             .then(res => {
                 setCustomers(res.data);
             })
-    }, []);
+    }
 
     return (
         <div>
@@ -26,6 +39,7 @@ const AllCustomers = () => {
                         <td>Phone</td>
                         <td>Remind In</td>
                         <td>Reminder Sent?</td>
+                        <td></td>
                     </tr>
                 </thead>
                 <tbody>
@@ -37,6 +51,7 @@ const AllCustomers = () => {
                                 <td>{customer.phone}</td>
                                 <td>{customer.time} Minutes</td>
                                 <td>{customer.reminder_sent ? `Sent` : `Not Sent`}</td>
+                                <td><button onClick={() => { handleCancel(customer.id) }} className="btn btn-danger">Cancel</button></td>
                             </tr>
                         ))
                     }
