@@ -114,8 +114,11 @@ app.post('/login', (req, res) => {
 })
 
 app.post('/create-customer', (req, res) => {
-    // params:
-    // name, phone, time (when they want to schedule the review)
+    // Check if the user is logged in
+    if (typeof req.session.user_id === 'undefined') {
+        res.json({ error: true, message: 'You must be logged in first' });
+        return;
+    }
 
     // Check params
     const check = [
@@ -126,12 +129,6 @@ app.post('/create-customer', (req, res) => {
 
     if (check.includes(undefined)) {
         res.json({ error: true, message: 'Please include all the required values' });
-        return;
-    }
-
-    // Check if the user is logged in
-    if (typeof req.session.user_id === 'undefined') {
-        res.json({ error: true, message: 'You must be logged in first' });
         return;
     }
 
@@ -146,13 +143,38 @@ app.post('/create-customer', (req, res) => {
     }
 
     // Create customer using the provided values
-    con.query('INSERT INTO customers (name, phone, remind_time, reminder_sent) VALUES (?, ?, NOW() + INTERVAL ? HOUR, 0)', [req.body.name, req.body.phone, req.body.time], (err, results) => {
+    con.query('INSERT INTO customers (owner_id, name, phone, remind_time, reminder_sent, create_time) VALUES (?, ?, ?, NOW() + INTERVAL ? HOUR, 0, NOW())', [req.session.user_id, req.body.name, req.body.phone, req.body.time], (err, results) => {
         if (err) throw err;
 
         res.json({ error: false, message: 'Successfully created customer' });
         return;
     });
+})
 
+app.post('/get-my-customers', (req, res) => {
+    // Check if the user is logged in
+    if (typeof req.session.user_id === 'undefined') {
+        res.json({ error: true, message: 'You must be logged in first' });
+        return;
+    }
+
+    // Grab all customers belonging to this user by their id
+    con.query('SELECT name, phone, TIMESTAMPDIFF(MINUTE, NOW(), remind_time) AS time, reminder_sent FROM customers WHERE owner_id=? ORDER BY create_time DESC', [req.session.user_id], (err, results) => {
+        if (err) throw err;
+
+        let customers = [];
+
+        for (let i = 0; i < results.length; i++) {
+            customers.push({
+                name: results[i].name,
+                phone: results[i].phone,
+                time: results[i].time,
+                reminder_sent: results[i].reminder_sent
+            });
+        }
+
+        res.json(customers);
+    });
 })
 
 app.listen(8080, () => {
