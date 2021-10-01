@@ -1,4 +1,24 @@
+import { useState } from "react";
+import axios from "axios";
+
 const CreateCustomer = () => {
+
+    const [name, setName] = useState('');
+    const [phone, setPhone] = useState('');
+    const [time, setTime] = useState(1);
+
+    const handleForm = () => {
+        alert(time);
+        axios.post(process.env.REACT_APP_API_ENDPOINT + '/create-customer', {
+            name,
+            phone,
+            time
+        }, { withCredentials: true })
+            .then((res) => {
+                console.log(res.data)
+            })
+    }
+
     return (
         <div>
             <h3>Create Customer</h3>
@@ -6,15 +26,23 @@ const CreateCustomer = () => {
             <div className="row">
                 <div className="col col-lg-8">
                     <label>Customer's Name</label>
-                    <input type="text" className="form-control mb-3" />
+                    <input onChange={(e) => { setName(e.target.value) }} type="text" className="form-control mb-3" />
 
                     <label>Phone Number</label>
-                    <input type="phone" className="form-control mb-3" />
+                    <input onChange={(e) => { setPhone(e.target.value) }} type="phone" className="form-control mb-3" />
 
                     <label>Reminder Time</label>
-                    <input type="datetime-local" className="d-flex"></input>
 
-                    <button className="btn btn-success my-3">Create Customer</button>
+                    <div className="col-5">
+                        <select onChange={(e) => { setTime(e.target.value) }} className="d-block form-select">
+                            <option value="1">In 1 Hour</option>
+                            <option value="2">In 2 Hours</option>
+                            <option value="3">In 3 Hours</option>
+                            <option value="4">In 4 Hours</option>
+                        </select>
+                    </div>
+
+                    <button onClick={handleForm} className="btn btn-success my-3">Create Customer</button>
                 </div>
             </div>
         </div>
