@@ -21,6 +21,15 @@ const MyBrand = () => {
             })
     }
 
+    const handleRemove = (id) => {
+        axios.post(process.env.REACT_APP_API_ENDPOINT + '/remove-network', {
+            id
+        }, { withCredentials: true })
+            .then(res => {
+                updateList();
+            })
+    }
+
     const updateList = () => {
         // Grab all the review networks
         axios.post(process.env.REACT_APP_API_ENDPOINT + '/get-all-review-networks', {}, { withCredentials: true })
@@ -58,7 +67,7 @@ const MyBrand = () => {
                                 <td className="align-middle"><img className="img-fluid" src={network.icon} /></td>
                                 <td className="align-middle"><h5 className="fw-normal">{network.name}</h5></td>
                                 <td className="align-middle"><a href={network.link} target="_blank" className="btn btn-success bg-primary">Preview</a></td>
-                                <td className="align-middle"><button className="btn btn-danger">Remove</button></td>
+                                <td className="align-middle"><button onClick={() => { handleRemove(network.id) }} className="btn btn-danger">Remove</button></td>
                             </tr>
                         ))
                     }
