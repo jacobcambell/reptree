@@ -49,7 +49,7 @@ const AllCustomers = () => {
                             <tr key={i}>
                                 <td>{customer.name}</td>
                                 <td>{customer.phone}</td>
-                                <td>{customer.time} Minutes</td>
+                                <td>{(customer.time > 60) ? `${Math.round(customer.time / 60)} Hours` : `${customer.time} Minutes`}</td>
                                 <td>{customer.reminder_sent ? `Sent` : `Not Sent`}</td>
                                 <td><button onClick={() => { handleCancel(customer.id) }} className="btn btn-danger">Cancel</button></td>
                             </tr>
