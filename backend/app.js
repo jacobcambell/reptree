@@ -311,6 +311,31 @@ app.post('/use-network', (req, res) => {
     })
 })
 
+app.post('/remove-network', (req, res) => {
+    // Check if the user is logged in
+    if (typeof req.session.user_id === 'undefined') {
+        res.json({ error: true, message: 'You must be logged in first' });
+        return;
+    }
+
+    // Check params
+    const check = [
+        req.body.id
+    ];
+
+    if (check.includes(undefined)) {
+        res.json({ error: true, message: 'Please include all the required values' });
+        return;
+    }
+
+    // Remove from table if user is actually using the provided network id
+    con.query('DELETE FROM review_networks WHERE owner_id=? AND network_id=?', [req.session.user_id, req.body.id], (err, results) => {
+        if (err) throw err;
+
+        res.json({ error: false, message: 'Stopped using this network' });
+    });
+})
+
 app.listen(8080, () => {
     console.log('RepTree API running on port 8080')
 });
