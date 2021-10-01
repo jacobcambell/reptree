@@ -8,7 +8,6 @@ const CreateCustomer = () => {
     const [time, setTime] = useState(1);
 
     const handleForm = () => {
-        alert(time);
         axios.post(process.env.REACT_APP_API_ENDPOINT + '/create-customer', {
             name,
             phone,
@@ -36,9 +35,9 @@ const CreateCustomer = () => {
                     <div className="col-5">
                         <select onChange={(e) => { setTime(e.target.value) }} className="d-block form-select">
                             <option value="1">In 1 Hour</option>
-                            <option value="2">In 2 Hours</option>
                             <option value="3">In 3 Hours</option>
-                            <option value="4">In 4 Hours</option>
+                            <option value="24">In 24 Hours</option>
+                            <option value="168">In 1 Week</option>
                         </select>
                     </div>
 
