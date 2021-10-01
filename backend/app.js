@@ -276,6 +276,41 @@ app.post('/get-my-review-networks', (req, res) => {
         });
 })
 
+app.post('/use-network', (req, res) => {
+    // Check if the user is logged in
+    if (typeof req.session.user_id === 'undefined') {
+        res.json({ error: true, message: 'You must be logged in first' });
+        return;
+    }
+
+    // Check params
+    const check = [
+        req.body.id,
+        req.body.link
+    ];
+
+    if (check.includes(undefined)) {
+        res.json({ error: true, message: 'Please include all the required values' });
+        return;
+    }
+
+    // Check if user is already using this review network
+    con.query('SELECT COUNT(*) AS c FROM review_networks WHERE owner_id=? AND network_id=?', [req.session.user_id, req.body.id], (err, results) => {
+        if (results[0].c > 0) {
+            // User is already using this review network
+            res.json({ error: true, message: 'You are already using this review network' });
+            return;
+        }
+
+        // Not using this network yet, add to table
+        con.query('INSERT INTO review_networks (network_id, owner_id, link) VALUES (?, ?, ?)', [req.body.id, req.session.user_id, req.body.link], (err, results) => {
+            if (err) throw err;
+
+            res.json({ error: false, message: 'Started using this review network' });
+        });
+    })
+})
+
 app.listen(8080, () => {
     console.log('RepTree API running on port 8080')
 });
