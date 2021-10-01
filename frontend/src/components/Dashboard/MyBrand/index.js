@@ -29,8 +29,9 @@ const MyBrand = () => {
             <table className="table">
                 <thead>
                     <tr className="fw-bold">
-                        <td className="col-1"></td>
-                        <td className="col-6"></td>
+                        <td className="col-2"></td>
+                        <td className="col-8"></td>
+                        <td className="col"></td>
                         <td className="col"></td>
                     </tr>
                 </thead>
@@ -39,9 +40,10 @@ const MyBrand = () => {
                         myNetworks &&
                         myNetworks.map((network) => (
                             <tr key={network.id}>
-                                <td><img className="img-fluid img-thumbnail" src={network.icon} /></td>
+                                <td className="align-middle"><img className="img-fluid img-thumbnail" src={network.icon} /></td>
                                 <td className="align-middle"><h5 className="fw-normal">{network.name}</h5></td>
-                                <td className="align-middle"><button className="btn btn-success bg-primary">Use {network.name}</button></td>
+                                <td className="align-middle"><a href={network.link} target="_blank" className="btn btn-success bg-primary">Preview</a></td>
+                                <td className="align-middle"><button className="btn btn-danger">Remove</button></td>
                             </tr>
                         ))
                     }
@@ -53,7 +55,7 @@ const MyBrand = () => {
             <table className="table">
                 <thead>
                     <tr className="fw-bold">
-                        <td className="col-1"></td>
+                        <td className="col-2"></td>
                         <td className="col-6"></td>
                         <td className="col"></td>
                     </tr>
@@ -63,7 +65,7 @@ const MyBrand = () => {
                         allNetworks &&
                         allNetworks.map((network) => (
                             <tr key={network.id}>
-                                <td><img className="img-fluid img-thumbnail" src={network.icon} /></td>
+                                <td className="align-middle"><img className="img-fluid img-thumbnail" src={network.icon} /></td>
                                 <td className="align-middle"><h5 className="fw-normal">{network.name}</h5></td>
                                 <td className="align-middle"><button className="btn btn-success bg-primary">Use {network.name}</button></td>
                             </tr>
