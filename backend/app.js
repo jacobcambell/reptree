@@ -210,22 +210,70 @@ app.post('/get-all-review-networks', (req, res) => {
         return;
     }
 
-    // Get a list of all the review networks
-    con.query('SELECT id, name, icon FROM review_network_list', (err, results) => {
-        if (err) throw err;
+    // Get a list of all the review networks, without any the user is currently using
+    con.query(`SELECT
+                review_network_list.id AS id,
+                review_network_list.name AS name,
+                review_network_list.icon AS icon
+                FROM review_network_list
+                WHERE
+                review_network_list.id NOT IN (
+                    SELECT review_networks.network_id FROM review_networks
+                    WHERE
+                    review_networks.owner_id=?
+                )
+                `,
+        [req.session.user_id],
+        (err, results) => {
+            if (err) throw err;
 
-        let networks = [];
+            let networks = [];
 
-        for (let i = 0; i < results.length; i++) {
-            networks.push({
-                id: results[i].id,
-                name: results[i].name,
-                icon: results[i].icon
-            });
-        }
+            for (let i = 0; i < results.length; i++) {
+                networks.push({
+                    id: results[i].id,
+                    name: results[i].name,
+                    icon: results[i].icon
+                });
+            }
 
-        res.json(networks);
-    });
+            res.json(networks);
+        });
+})
+
+app.post('/get-my-review-networks', (req, res) => {
+    // Check if the user is logged in
+    if (typeof req.session.user_id === 'undefined') {
+        res.json({ error: true, message: 'You must be logged in first' });
+        return;
+    }
+
+    // Get a list of all the review networks belonging to the user
+    con.query(`SELECT
+                review_network_list.id AS id,
+                review_network_list.name AS name,
+                review_network_list.icon AS icon,
+                review_networks.link AS link
+                FROM review_network_list, review_networks
+                WHERE review_network_list.id=review_networks.network_id AND
+                review_networks.owner_id=?`,
+        [req.session.user_id],
+        (err, results) => {
+            if (err) throw err;
+
+            let networks = [];
+
+            for (let i = 0; i < results.length; i++) {
+                networks.push({
+                    id: results[i].id,
+                    name: results[i].name,
+                    icon: results[i].icon,
+                    link: results[i].link
+                });
+            }
+
+            res.json(networks);
+        });
 })
 
 app.listen(8080, () => {
