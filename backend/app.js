@@ -113,6 +113,38 @@ app.post('/login', (req, res) => {
     });
 })
 
+app.post('/create-customer', (req, res) => {
+    // params:
+    // name, phone, time (when they want to schedule the review)
+
+    // Check params
+    const check = [
+        req.body.name,
+        req.body.phone,
+        req.body.time
+    ];
+
+    if (check.includes(undefined)) {
+        res.json({ error: true, message: 'Please include all the required values' });
+        return;
+    }
+
+    // Check if the user is logged in
+    if (typeof req.session.user_id === 'undefined') {
+        res.json({ error: true, message: 'You must be logged in first' });
+        return;
+    }
+
+    // Create customer using the provided values
+    con.query('INSERT INTO customers (name, phone, remind_time, reminder_sent) VALUES (?, ?, NOW(), 0)', [req.body.name, req.body.phone], (err, results) => {
+        if (err) throw err;
+
+        res.json({ error: false, message: 'Success' });
+        return;
+    });
+
+})
+
 app.listen(8080, () => {
     console.log('RepTree API running on port 8080')
 });
