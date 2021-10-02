@@ -14,6 +14,12 @@ const Settings = () => {
             .then(res => {
                 setSmsMessage(res.data.sms_message);
             })
+
+        // Load the user's company name
+        axios.post(process.env.REACT_APP_API_ENDPOINT + '/get-companyname', {}, { withCredentials: true })
+            .then(res => {
+                setCompanyName(res.data.companyname);
+            })
     }, []);
 
     const handleSMSUpdate = () => {
@@ -57,7 +63,7 @@ const Settings = () => {
             <button onClick={handleSMSUpdate} className="btn btn-primary my-2">Update</button>
 
             <h5 className="pt-5">Company Name</h5>
-            <input onChange={(e) => { setCompanyName(e.target.value) }} type="text" className="form-control" />
+            <input onChange={(e) => { setCompanyName(e.target.value) }} type="text" className="form-control" value={companyName} />
             {
                 successCompanyMsg &&
                 <div className="alert alert-success my-2">{successCompanyMsg}</div>
