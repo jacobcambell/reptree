@@ -358,6 +358,30 @@ app.post('/load-sms', (req, res) => {
     });
 })
 
+app.post('/update-sms', (req, res) => {
+    // Check if the user is logged in
+    if (typeof req.session.user_id === 'undefined') {
+        res.json({ error: true, message: 'You must be logged in first' });
+        return;
+    }
+
+    // Check params
+    const check = [
+        req.body.sms_message
+    ];
+
+    if (check.includes(undefined)) {
+        res.json({ error: true, message: 'Please include all the required values' });
+        return;
+    }
+
+    // Update the user's sms message with the one they sent
+    con.query('UPDATE users SET users.sms_message=? WHERE users.id=?', [req.body.sms_message, req.session.user_id], (err, results) => {
+        res.json({ error: false, message: 'Updated SMS message' });
+        return;
+    });
+})
+
 app.listen(8080, () => {
     console.log('RepTree API running on port 8080')
 });
