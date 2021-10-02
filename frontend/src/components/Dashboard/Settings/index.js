@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 const Settings = () => {
 
     const [smsMessage, setSmsMessage] = useState('');
+    const [successMsg, setSuccessMsg] = useState();
 
     useEffect(() => {
         // Load the user's SMS message
@@ -12,6 +13,17 @@ const Settings = () => {
                 setSmsMessage(res.data.sms_message);
             })
     }, []);
+
+    const handleUpdate = () => {
+        axios.post(process.env.REACT_APP_API_ENDPOINT + '/update-sms', {
+            sms_message: smsMessage
+        }, { withCredentials: true })
+            .then(res => {
+                if (!res.data.error) {
+                    setSuccessMsg(res.data.message);
+                }
+            })
+    }
 
     return (
         <div>
@@ -24,7 +36,12 @@ const Settings = () => {
 
             <textarea rows="7" className="form-control" onChange={(e) => { setSmsMessage(e.target.value) }} value={smsMessage}></textarea>
 
-            <h5 className="pt-3">Message Preview:</h5>
+            {
+                successMsg &&
+                <div className="alert alert-success my-2">{successMsg}</div>
+            }
+
+            <button onClick={handleUpdate} className="btn btn-primary my-2">Update</button>
         </div>
     );
 }
