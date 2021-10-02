@@ -382,6 +382,31 @@ app.post('/update-sms', (req, res) => {
     });
 })
 
+app.post('/edit-companyname', (req, res) => {
+    // Check if the user is logged in
+    if (typeof req.session.user_id === 'undefined') {
+        res.json({ error: true, message: 'You must be logged in first' });
+        return;
+    }
+
+    // Check params
+    const check = [
+        req.body.companyname
+    ];
+
+    if (check.includes(undefined)) {
+        res.json({ error: true, message: 'Please include all the required values' });
+        return;
+    }
+
+    con.query('UPDATE users SET users.companyname=? WHERE users.id=?', [req.body.companyname, req.session.user_id], (err, results) => {
+        if (err) throw err;
+
+        res.json({ error: false, message: 'Updated your company name' });
+        return;
+    });
+})
+
 app.listen(8080, () => {
     console.log('RepTree API running on port 8080')
 });
