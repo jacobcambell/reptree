@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 const Settings = () => {
 
     const [smsMessage, setSmsMessage] = useState('');
-    const [successMsg, setSuccessMsg] = useState();
+    const [companyName, setCompanyName] = useState('');
+    const [successSMSMsg, setSuccessSMSMsg] = useState();
+    const [successCompanyMsg, setSuccessCompanyMsg] = useState();
 
     useEffect(() => {
         // Load the user's SMS message
@@ -12,15 +14,32 @@ const Settings = () => {
             .then(res => {
                 setSmsMessage(res.data.sms_message);
             })
+
+        // Load the user's company name
+        axios.post(process.env.REACT_APP_API_ENDPOINT + '/get-companyname', {}, { withCredentials: true })
+            .then(res => {
+                setCompanyName(res.data.companyname);
+            })
     }, []);
 
-    const handleUpdate = () => {
+    const handleSMSUpdate = () => {
         axios.post(process.env.REACT_APP_API_ENDPOINT + '/update-sms', {
             sms_message: smsMessage
         }, { withCredentials: true })
             .then(res => {
                 if (!res.data.error) {
-                    setSuccessMsg(res.data.message);
+                    setSuccessSMSMsg(res.data.message);
+                }
+            })
+    }
+
+    const handleCompanyUpdate = () => {
+        axios.post(process.env.REACT_APP_API_ENDPOINT + '/edit-companyname', {
+            companyname: companyName
+        }, { withCredentials: true })
+            .then(res => {
+                if (!res.data.error) {
+                    setSuccessCompanyMsg(res.data.message);
                 }
             })
     }
@@ -37,11 +56,19 @@ const Settings = () => {
             <textarea rows="7" className="form-control" onChange={(e) => { setSmsMessage(e.target.value) }} value={smsMessage}></textarea>
 
             {
-                successMsg &&
-                <div className="alert alert-success my-2">{successMsg}</div>
+                successSMSMsg &&
+                <div className="alert alert-success my-2">{successSMSMsg}</div>
             }
 
-            <button onClick={handleUpdate} className="btn btn-primary my-2">Update</button>
+            <button onClick={handleSMSUpdate} className="btn btn-primary my-2">Update</button>
+
+            <h5 className="pt-5">Company Name</h5>
+            <input onChange={(e) => { setCompanyName(e.target.value) }} type="text" className="form-control" value={companyName} />
+            {
+                successCompanyMsg &&
+                <div className="alert alert-success my-2">{successCompanyMsg}</div>
+            }
+            <button onClick={handleCompanyUpdate} className="btn btn-primary my-2">Change</button>
         </div>
     );
 }
