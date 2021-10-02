@@ -340,7 +340,23 @@ app.post('/remove-network', (req, res) => {
     });
 })
 
-// This is develop branch
+app.post('/load-sms', (req, res) => {
+    // Check if the user is logged in
+    if (typeof req.session.user_id === 'undefined') {
+        res.json({ error: true, message: 'You must be logged in first' });
+        return;
+    }
+
+    // Get this user's sms message
+    con.query('SELECT sms_message FROM users WHERE users.id=?', [req.session.user_id], (err, results) => {
+        if (err) throw err;
+
+        res.json({
+            sms_message: results[0].sms_message
+        });
+        return;
+    });
+})
 
 app.listen(8080, () => {
     console.log('RepTree API running on port 8080')
