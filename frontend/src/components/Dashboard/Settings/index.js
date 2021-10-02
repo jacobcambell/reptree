@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 const Settings = () => {
 
     const [smsMessage, setSmsMessage] = useState('');
-    const [companyName, setCompanyName] = useState();
+    const [companyName, setCompanyName] = useState('');
     const [successSMSMsg, setSuccessSMSMsg] = useState();
     const [successCompanyMsg, setSuccessCompanyMsg] = useState();
 
