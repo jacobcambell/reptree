@@ -407,6 +407,22 @@ app.post('/edit-companyname', (req, res) => {
     });
 })
 
+app.post('/get-companyname', (req, res) => {
+    // Check if the user is logged in
+    if (typeof req.session.user_id === 'undefined') {
+        res.json({ error: true, message: 'You must be logged in first' });
+        return;
+    }
+
+    // Get this user's company name
+    con.query('SELECT users.companyname FROM users WHERE users.id=?', [req.session.user_id], (err, results) => {
+        if (err) throw err;
+
+        res.json({ companyname: results[0].companyname });
+        return;
+    });
+})
+
 app.listen(8080, () => {
     console.log('RepTree API running on port 8080')
 });
