@@ -34,12 +34,14 @@ app.use(express.json());
 app.post('/register', (req, res) => {
     // Return json object with property "error", which will be either true or false
 
-    // Check if parameters were sent
-    if (
-        typeof req.body.email !== 'string' ||
-        typeof req.body.password !== 'string' ||
-        typeof req.body.companyname !== 'string'
-    ) {
+    // Check params
+    const check = [
+        req.body.email,
+        req.body.password,
+        req.body.companyname
+    ];
+
+    if (check.includes(undefined)) {
         res.json({ error: true, message: 'Please provide an email, password, and company name' });
         return;
     }
@@ -77,11 +79,13 @@ app.post('/register', (req, res) => {
 app.post('/login', (req, res) => {
     // Return json object with property "error", which will be either true or false
 
-    // Check if parameters were sent
-    if (
-        typeof req.body.email !== 'string' ||
-        typeof req.body.password !== 'string'
-    ) {
+    // Check params
+    const check = [
+        req.body.email,
+        req.body.password
+    ];
+
+    if (check.includes(undefined)) {
         res.json({ error: true, message: 'Please provide an email and password' });
         return;
     }
