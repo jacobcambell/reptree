@@ -426,3 +426,24 @@ app.post('/get-companyname', (req, res) => {
 app.listen(8080, () => {
     console.log('RepTree API running on port 8080')
 });
+
+// Check if there are text messages to send
+// setTimeout(() => {
+
+// }, 2000);
+
+con.query(`SELECT
+            customers.id, customers.name, customers.phone,
+            users.companyname, users.sms_message
+            FROM customers, users
+            WHERE customers.remind_time < NOW() AND
+            customers.reminder_sent=0 AND
+            users.id=customers.owner_id
+            `, (err, results) => {
+    if (err) throw err;
+
+    if (results.length === 0) {
+        // No users to send texts to
+        return;
+    }
+});
