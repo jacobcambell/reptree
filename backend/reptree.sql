@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:8889
--- Generation Time: Oct 02, 2021 at 12:24 AM
+-- Generation Time: Oct 03, 2021 at 05:02 PM
 -- Server version: 5.7.34
 -- PHP Version: 7.4.21
 
@@ -87,7 +87,8 @@ CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password` varchar(100) NOT NULL,
-  `companyname` varchar(100) NOT NULL
+  `companyname` varchar(100) NOT NULL,
+  `sms_message` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
