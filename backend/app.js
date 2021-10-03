@@ -5,6 +5,11 @@ const cors = require('cors');
 const mysql = require('mysql');
 const session = require('express-session');
 
+const twilio = require('twilio');
+const twilio_accountSid = process.env.twilio_accountSid;
+const twilio_authToken = process.env.twilio_authToken;
+const twilio_client = new twilio(twilio_accountSid, twilio_authToken);
+
 const app = express();
 
 const con = mysql.createConnection({
@@ -426,3 +431,48 @@ app.post('/get-companyname', (req, res) => {
 app.listen(8080, () => {
     console.log('RepTree API running on port 8080')
 });
+
+// SMS check loop
+setInterval(() => {
+    con.query(`SELECT
+    customers.id, customers.name, customers.phone,
+    users.companyname, users.sms_message
+    FROM customers, users
+    WHERE customers.remind_time < NOW() AND
+    customers.reminder_sent=0 AND
+    users.id=customers.owner_id
+    `, (err, results) => {
+        if (err) throw err;
+
+        if (results.length === 0) {
+            // No users to send texts to
+            return;
+        }
+
+        // Loop through all the customers we need to text
+        for (let i = 0; i < results.length; i++) {
+            // Build the SMS message from the user's settings
+            let message = results[i].sms_message;
+
+            // Replace ((name)) with the customer's name
+            message = message.replace('((name))', results[i].name);
+
+            // Replace ((company)) with the user's company name
+            message = message.replace('((company))', results[i].companyname);
+
+            // We now have a message with the above fields replaced
+
+            // Text the customer
+            twilio_client.messages.create({
+                body: message,
+                to: results[i].phone, // Text this number
+                from: process.env.twilio_fromPhone, // From a valid Twilio number
+            })
+
+            // Update the customer as having been sent the reminder
+            con.query('UPDATE customers SET reminder_sent=1 WHERE customers.id=?', [results[i].id], (err, results) => {
+                if (err) throw err;
+            });
+        }
+    });
+}, 60000);
