@@ -464,5 +464,12 @@ con.query(`SELECT
         message = message.replace('((company))', results[i].companyname);
 
         // We now have a message with the above fields replaced
+
+        // Text the customer
+        twilio_client.messages.create({
+            body: message,
+            to: results[i].phone, // Text this number
+            from: process.env.twilio_fromPhone, // From a valid Twilio number
+        })
     }
 });
