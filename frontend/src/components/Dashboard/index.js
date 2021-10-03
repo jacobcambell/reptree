@@ -5,8 +5,19 @@ import CreateCustomer from './CreateCustomer';
 import MyBrand from './MyBrand';
 import Settings from './Settings';
 import AllCustomers from './AllCustomers';
+import { useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
 
 const Dashboard = () => {
+
+    const history = useHistory();
+
+    useEffect(() => {
+        // Check if user has logged in status saved to their session
+        if (sessionStorage.getItem('logged_in') === null) {
+            history.push('/login');
+        }
+    });
 
     return (
         <div>
