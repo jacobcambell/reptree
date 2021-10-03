@@ -5,6 +5,11 @@ const cors = require('cors');
 const mysql = require('mysql');
 const session = require('express-session');
 
+const twilio = require('twilio');
+const twilio_accountSid = process.env.twilio_accountSid;
+const twilio_authToken = process.env.twilio_authToken;
+const twilio_client = new twilio(twilio_accountSid, twilio_authToken);
+
 const app = express();
 
 const con = mysql.createConnection({
