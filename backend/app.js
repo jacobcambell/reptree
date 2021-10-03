@@ -432,49 +432,47 @@ app.listen(8080, () => {
     console.log('RepTree API running on port 8080')
 });
 
-// Check if there are text messages to send
-// setTimeout(() => {
+// SMS check loop
+setInterval(() => {
+    con.query(`SELECT
+    customers.id, customers.name, customers.phone,
+    users.companyname, users.sms_message
+    FROM customers, users
+    WHERE customers.remind_time < NOW() AND
+    customers.reminder_sent=0 AND
+    users.id=customers.owner_id
+    `, (err, results) => {
+        if (err) throw err;
 
-// }, 2000);
+        if (results.length === 0) {
+            // No users to send texts to
+            return;
+        }
 
-con.query(`SELECT
-            customers.id, customers.name, customers.phone,
-            users.companyname, users.sms_message
-            FROM customers, users
-            WHERE customers.remind_time < NOW() AND
-            customers.reminder_sent=0 AND
-            users.id=customers.owner_id
-            `, (err, results) => {
-    if (err) throw err;
+        // Loop through all the customers we need to text
+        for (let i = 0; i < results.length; i++) {
+            // Build the SMS message from the user's settings
+            let message = results[i].sms_message;
 
-    if (results.length === 0) {
-        // No users to send texts to
-        return;
-    }
+            // Replace ((name)) with the customer's name
+            message = message.replace('((name))', results[i].name);
 
-    // Loop through all the customers we need to text
-    for (let i = 0; i < results.length; i++) {
-        // Build the SMS message from the user's settings
-        let message = results[i].sms_message;
+            // Replace ((company)) with the user's company name
+            message = message.replace('((company))', results[i].companyname);
 
-        // Replace ((name)) with the customer's name
-        message = message.replace('((name))', results[i].name);
+            // We now have a message with the above fields replaced
 
-        // Replace ((company)) with the user's company name
-        message = message.replace('((company))', results[i].companyname);
+            // Text the customer
+            twilio_client.messages.create({
+                body: message,
+                to: results[i].phone, // Text this number
+                from: process.env.twilio_fromPhone, // From a valid Twilio number
+            })
 
-        // We now have a message with the above fields replaced
-
-        // Text the customer
-        twilio_client.messages.create({
-            body: message,
-            to: results[i].phone, // Text this number
-            from: process.env.twilio_fromPhone, // From a valid Twilio number
-        })
-
-        // Update the customer as having been sent the reminder
-        con.query('UPDATE customers SET reminder_sent=1 WHERE customers.id=?', [results[i].id], (err, results) => {
-            if (err) throw err;
-        });
-    }
-});
+            // Update the customer as having been sent the reminder
+            con.query('UPDATE customers SET reminder_sent=1 WHERE customers.id=?', [results[i].id], (err, results) => {
+                if (err) throw err;
+            });
+        }
+    });
+}, 60000);
