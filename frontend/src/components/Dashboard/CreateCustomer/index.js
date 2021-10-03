@@ -6,7 +6,7 @@ const CreateCustomer = () => {
 
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
-    const [time, setTime] = useState(1);
+    const [time, setTime] = useState(0);
 
     const [successMsg, setSuccessMsg] = useState(null);
     const [errorMsg, setErrorMsg] = useState(null);
@@ -52,6 +52,7 @@ const CreateCustomer = () => {
 
                     <div className="col-5">
                         <select onChange={(e) => { setTime(e.target.value) }} className="d-block form-select">
+                            <option value="0">Now</option>
                             <option value="1">In 1 Hour</option>
                             <option value="3">In 3 Hours</option>
                             <option value="24">In 24 Hours</option>
