@@ -446,4 +446,18 @@ con.query(`SELECT
         // No users to send texts to
         return;
     }
+
+    // Loop through all the customers we need to text
+    for (let i = 0; i < results.length; i++) {
+        // Build the SMS message from the user's settings
+        let message = results[i].sms_message;
+
+        // Replace ((name)) with the customer's name
+        message = message.replace('((name))', results[i].name);
+
+        // Replace ((company)) with the user's company name
+        message = message.replace('((company))', results[i].companyname);
+
+        // We now have a message with the above fields replaced
+    }
 });
