@@ -476,3 +476,67 @@ setInterval(() => {
         }
     });
 }, 60000);
+
+app.post('/open-reminder', (req, res) => {
+    // Called when a customer opens the link they were texted, will update the customer as having
+    // opened the link and update open time
+
+    // Check params
+    const check = [
+        req.body.customer_id
+    ];
+
+    if (check.includes(undefined)) {
+        res.json({ error: true, message: 'Please include all the required values' });
+        return;
+    }
+
+    // Mark as opened - Note: currently there is no form of authentication, anyone could send a customer id and mark as opened
+    con.query('UPDATE customers SET reminder_opened=1, reminder_open_time=NOW() WHERE customers.id=?', [req.body.customer_id], (err, results) => {
+        if (err) throw err;
+
+        res.json({ error: false, message: 'Marked as open' });
+        return;
+    });
+})
+
+app.post('/list-review-networks', (req, res) => {
+    // Gets a list of all the review network info and links that belong to the owner of the provided customer id
+
+    // Check params
+    const check = [
+        req.body.customer_id
+    ];
+
+    if (check.includes(undefined)) {
+        res.json({ error: true, message: 'Please include all the required values' });
+        return;
+    }
+
+    // Load all review network data
+    con.query(`SELECT
+                review_networks.link,
+                review_network_list.icon
+
+                FROM customers, review_networks, users, review_network_list
+                WHERE
+                customers.owner_id=review_networks.owner_id AND
+                customers.owner_id=users.id AND
+                customers.id=? AND
+                review_networks.network_id=review_network_list.id
+    `, [req.body.customer_id], (err, results) => {
+        if (err) throw err;
+
+        let review_networks = [];
+
+        for (let i = 0; i < results.length; i++) {
+            review_networks.push({
+                link: results[i].link,
+                icon: results[i].icon
+            });
+        }
+
+        res.json(review_networks);
+        return;
+    });
+})
