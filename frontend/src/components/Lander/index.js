@@ -6,6 +6,7 @@ const Lander = () => {
 
     const { id } = useParams();
     const [reviewNetworks, setReviewNetworks] = useState([]);
+    const [customerInfo, setCustomerInfo] = useState();
 
     useEffect(() => {
         axios.post(process.env.REACT_APP_API_ENDPOINT + '/open-reminder', {
@@ -18,10 +19,20 @@ const Lander = () => {
             .then(results => {
                 setReviewNetworks(results.data);
             })
+
+        axios.post(process.env.REACT_APP_API_ENDPOINT + '/get-customer-info', {
+            customer_id: id
+        })
+            .then(results => {
+                setCustomerInfo(results.data);
+            })
+
     }, []);
 
     return (
-        <div></div>
+        <div className="container-sm">
+            <h3>Leave review for Business</h3>
+        </div>
     );
 }
 
