@@ -6,7 +6,10 @@ const Lander = () => {
 
     const { id } = useParams();
     const [reviewNetworks, setReviewNetworks] = useState([]);
-    const [customerInfo, setCustomerInfo] = useState();
+    const [customerInfo, setCustomerInfo] = useState({
+        name: '',
+        companyname: ''
+    });
 
     useEffect(() => {
         axios.post(process.env.REACT_APP_API_ENDPOINT + '/open-reminder', {
@@ -31,7 +34,9 @@ const Lander = () => {
 
     return (
         <div className="container-sm">
-            <h3>Leave review for Business</h3>
+            <h4 className="text-center m-3">Hi, {customerInfo.name}</h4>
+            <h6 className="text-center text-muted m-0">Thanks for your recent visit to {customerInfo.companyname}</h6>
+            <h6 className="text-center text-muted m-0">If you wouldn't mind, please leave us a review on one of the below platforms.</h6>
         </div>
     );
 }
