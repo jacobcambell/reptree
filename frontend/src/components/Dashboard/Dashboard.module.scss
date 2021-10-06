@@ -10,4 +10,5 @@ $navWidth: 300px;
     height: 100vh;
     width: calc(100vw - #{$navWidth} - 50px);
     float: left;
+    overflow-y: scroll;
 }

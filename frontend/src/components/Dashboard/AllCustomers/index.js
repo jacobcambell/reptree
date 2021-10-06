@@ -6,6 +6,7 @@ const AllCustomers = () => {
     // Array of objects with properties:
     // name, phone, time, reminder_sent
     const [customers, setCustomers] = useState([]);
+
     useEffect(() => {
         getCustomers();
     }, []);
@@ -49,9 +50,20 @@ const AllCustomers = () => {
                             <tr key={i}>
                                 <td>{customer.name}</td>
                                 <td>{customer.phone}</td>
-                                <td>{(customer.time > 60) ? `${Math.round(customer.time / 60)} Hours` : `${customer.time} Minutes`}</td>
+
+                                {
+                                    customer.reminder_sent ?
+                                        <td></td> :
+                                        <td>{(customer.time > 60) ? `${Math.round(customer.time / 60)} Hours` : `${customer.time} Minutes`}</td>
+                                }
+
                                 <td>{customer.reminder_sent ? `Sent` : `Not Sent`}</td>
-                                <td><button onClick={() => { handleCancel(customer.id) }} className="btn btn-danger">Cancel</button></td>
+
+                                {
+                                    customer.reminder_sent ?
+                                        <td></td> :
+                                        <td><button onClick={() => { handleCancel(customer.id) }} className="btn btn-danger">Cancel</button></td>
+                                }
                             </tr>
                         ))
                     }

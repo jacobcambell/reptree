@@ -8,5 +8,6 @@
   height: 100vh;
   width: calc(100vw - 300px - 50px);
   float: left;
+  overflow-y: scroll;
 }
 /*# sourceMappingURL=Dashboard.module.css.map */
