@@ -432,51 +432,6 @@ app.listen(8080, () => {
     console.log('RepTree API running on port 8080')
 });
 
-// SMS check loop
-setInterval(() => {
-    con.query(`SELECT
-    customers.id, customers.name, customers.phone,
-    users.companyname, users.sms_message
-    FROM customers, users
-    WHERE customers.remind_time < NOW() AND
-    customers.reminder_sent=0 AND
-    users.id=customers.owner_id
-    `, (err, results) => {
-        if (err) throw err;
-
-        if (results.length === 0) {
-            // No users to send texts to
-            return;
-        }
-
-        // Loop through all the customers we need to text
-        for (let i = 0; i < results.length; i++) {
-            // Build the SMS message from the user's settings
-            let message = results[i].sms_message;
-
-            // Replace ((name)) with the customer's name
-            message = message.replace('((name))', results[i].name);
-
-            // Replace ((company)) with the user's company name
-            message = message.replace('((company))', results[i].companyname);
-
-            // We now have a message with the above fields replaced
-
-            // Text the customer
-            twilio_client.messages.create({
-                body: message,
-                to: results[i].phone, // Text this number
-                from: process.env.twilio_fromPhone, // From a valid Twilio number
-            })
-
-            // Update the customer as having been sent the reminder
-            con.query('UPDATE customers SET reminder_sent=1 WHERE customers.id=?', [results[i].id], (err, results) => {
-                if (err) throw err;
-            });
-        }
-    });
-}, 60000);
-
 app.post('/open-reminder', (req, res) => {
     // Called when a customer opens the link they were texted, will update the customer as having
     // opened the link and update open time
@@ -540,3 +495,78 @@ app.post('/list-review-networks', (req, res) => {
         return;
     });
 })
+
+app.post('/get-customer-info', (req, res) => {
+    // Check params
+    const check = [
+        req.body.customer_id
+    ];
+
+    if (check.includes(undefined)) {
+        res.json({ error: true, message: 'Please include all the required values' });
+        return;
+    }
+
+    // Get this customer's information
+    con.query(`SELECT
+                customers.name,
+                users.companyname
+                FROM customers, users
+                WHERE
+                customers.owner_id=users.id AND
+                customers.id=?
+    `, [req.body.customer_id], (err, results) => {
+        if (err) throw err;
+
+        res.json({
+            name: results[0].name,
+            companyname: results[0].companyname
+        });
+        return;
+    });
+})
+
+// SMS check loop
+setInterval(() => {
+    con.query(`SELECT
+    customers.id, customers.name, customers.phone,
+    users.companyname, users.sms_message
+    FROM customers, users
+    WHERE customers.remind_time < NOW() AND
+    customers.reminder_sent=0 AND
+    users.id=customers.owner_id
+    `, (err, results) => {
+        if (err) throw err;
+
+        if (results.length === 0) {
+            // No users to send texts to
+            return;
+        }
+
+        // Loop through all the customers we need to text
+        for (let i = 0; i < results.length; i++) {
+            // Build the SMS message from the user's settings
+            let message = results[i].sms_message;
+
+            // Replace ((name)) with the customer's name
+            message = message.replace('((name))', results[i].name);
+
+            // Replace ((company)) with the user's company name
+            message = message.replace('((company))', results[i].companyname);
+
+            // We now have a message with the above fields replaced
+
+            // Text the customer
+            twilio_client.messages.create({
+                body: message,
+                to: results[i].phone, // Text this number
+                from: process.env.twilio_fromPhone, // From a valid Twilio number
+            })
+
+            // Update the customer as having been sent the reminder
+            con.query('UPDATE customers SET reminder_sent=1 WHERE customers.id=?', [results[i].id], (err, results) => {
+                if (err) throw err;
+            });
+        }
+    });
+}, 60000);
