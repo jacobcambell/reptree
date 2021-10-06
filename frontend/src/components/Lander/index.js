@@ -33,11 +33,23 @@ const Lander = () => {
     }, []);
 
     return (
-        <div className="container-sm">
+        <div className="container">
             <h4 className="text-center m-3">Hi, {customerInfo.name}</h4>
             <h6 className="text-center text-muted m-0">Thanks for your recent visit to {customerInfo.companyname}</h6>
             <h6 className="text-center text-muted m-0">If you wouldn't mind, please leave us a review on one of the below platforms.</h6>
-        </div>
+
+            <div className="row justify-content-center mt-3">
+                {
+                    reviewNetworks &&
+                    reviewNetworks.map((network) => (
+                        <a href={network.link} target="_blank" class="card mx-3 col-1 p-3 d-flex text-decoration-none">
+                            <img src={network.icon} alt="" className="img-fluid" />
+                            <h6 className="align-self-center mt-3">{network.name}</h6>
+                        </a>
+                    ))
+                }
+            </div>
+        </div >
     );
 }
 
