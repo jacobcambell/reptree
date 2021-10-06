@@ -528,6 +528,56 @@ app.post('/get-customer-info', (req, res) => {
     });
 })
 
+app.post('/get-analytics', (req, res) => {
+    // total number of customers
+    // total reminders sent
+    // total reminders opened
+
+    // Check if the user is logged in
+    if (typeof req.session.user_id === 'undefined') {
+        res.json({ error: true, message: 'You must be logged in first' });
+        return;
+    }
+
+    // Get this user's analytics
+    let totalCustomers = 0;
+    let remindersSent = 0;
+    let remindersOpened = 0;
+
+    // Total Customers
+    con.query(`SELECT
+                COUNT(*) AS c
+                FROM customers
+                WHERE
+                customers.owner_id=?
+                `, [req.session.user_id], (err, results) => {
+        if (err) throw err;
+
+        totalCustomers = Number(results[0].c);
+
+        // Total Reminders Sent
+        con.query('SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=? AND customers.reminder_sent=1', [req.session.user_id], (err, results) => {
+            if (err) throw err;
+
+            remindersSent = Number(results[0].c);
+
+            // Total Reminders Opened
+            con.query('SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=? AND customers.reminder_sent=1 AND customers.reminder_opened=1', [req.session.user_id], (err, results) => {
+                if (err) throw err;
+
+                remindersOpened = Number(results[0].c);
+
+                res.json({
+                    totalCustomers,
+                    remindersSent,
+                    remindersOpened
+                });
+                return;
+            })
+        });
+    });
+})
+
 // SMS check loop
 setInterval(() => {
     con.query(`SELECT
