@@ -471,7 +471,8 @@ app.post('/list-review-networks', (req, res) => {
     // Load all review network data
     con.query(`SELECT
                 review_networks.link,
-                review_network_list.icon
+                review_network_list.icon,
+                review_network_list.name
 
                 FROM customers, review_networks, users, review_network_list
                 WHERE
@@ -487,7 +488,8 @@ app.post('/list-review-networks', (req, res) => {
         for (let i = 0; i < results.length; i++) {
             review_networks.push({
                 link: results[i].link,
-                icon: results[i].icon
+                icon: results[i].icon,
+                name: results[i].name
             });
         }
 
