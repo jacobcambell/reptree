@@ -9,6 +9,7 @@ const twilio = require('twilio');
 const twilio_accountSid = process.env.twilio_accountSid;
 const twilio_authToken = process.env.twilio_authToken;
 const twilio_client = new twilio(twilio_accountSid, twilio_authToken);
+const bitly = require('./bitly.js');
 
 const app = express();
 
@@ -606,22 +607,27 @@ setInterval(() => {
             // Replace ((company)) with the user's company name
             message = message.replace('((company))', results[i].companyname);
 
-            // Append review link to end of message
-            message += ` ${process.env.FRONTEND_BASEURL}/leave-review/${results[i].customer_id}`;
+            // Build review link
+            $reviewLink = `${process.env.FRONTEND_BASEURL}/leave-review/${results[i].customer_id}`;
 
-            // We now have a message with the above fields replaced
+            // Get Bitly short link
+            $bitlyLink = bitly.createShortLink($reviewLink)
+                .then((link) => {
+                    // Append Bitly link to end of message
+                    message += ` ${link}`;
 
-            // Text the customer
-            twilio_client.messages.create({
-                body: message,
-                to: results[i].phone, // Text this number
-                from: process.env.twilio_fromPhone, // From a valid Twilio number
-            })
+                    // Text the customer
+                    twilio_client.messages.create({
+                        body: message,
+                        to: results[i].phone, // Text this number
+                        from: process.env.twilio_fromPhone, // From a valid Twilio number
+                    })
 
-            // Update the customer as having been sent the reminder
-            con.query('UPDATE customers SET reminder_sent=1 WHERE customers.id=?', [results[i].customer_id], (err, results) => {
-                if (err) throw err;
-            });
+                    // Update the customer as having been sent the reminder
+                    con.query('UPDATE customers SET reminder_sent=1 WHERE customers.id=?', [results[i].customer_id], (err, results) => {
+                        if (err) throw err;
+                    });
+                })
         }
     });
-}, 60000);
+}, 5000);
