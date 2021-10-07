@@ -107,7 +107,7 @@ const MyBrand = () => {
 
             {
                 popupOpen &&
-                <Popup networkName={selectedNetworkName}></Popup>
+                <Popup networkName={selectedNetworkName} setPopupOpen={setPopupOpen}></Popup>
             }
         </div>
     );
