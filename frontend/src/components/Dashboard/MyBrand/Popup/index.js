@@ -1,9 +1,16 @@
+import { useState } from 'react';
 import styles from './Popup.module.css';
 
-const Popup = ({ networkName, setPopupOpen }) => {
+const Popup = ({ networkName, setPopupOpen, setNetwork }) => {
+
+    const [link, setLink] = useState('');
 
     const closePopup = () => {
         setPopupOpen(false);
+    }
+
+    const handleSubmit = () => {
+        setNetwork(link);
     }
 
     return (
@@ -12,8 +19,8 @@ const Popup = ({ networkName, setPopupOpen }) => {
                 <button onClick={closePopup} type="button" class="btn-close align-self-end"></button>
                 <h4>Enter {networkName} Link</h4>
                 <h5 className="text-muted fw-normal">This is the link your customers will be sent to when they click your {networkName} button.</h5>
-                <input type="text" className="form-control my-3" placeholder={`${networkName} Link`} />
-                <button className="btn btn-primary">Submit</button>
+                <input onChange={(e) => { setLink(e.target.value) }} type="text" className="form-control my-3" placeholder={`${networkName} Link`} />
+                <button onClick={handleSubmit} className="btn btn-primary">Submit</button>
             </div>
         </div>
     );
