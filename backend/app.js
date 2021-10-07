@@ -242,7 +242,12 @@ app.post('/cancel-customer', (req, res) => {
     con.query('DELETE FROM customers WHERE id=? AND owner_id=? AND reminder_sent=0', [req.body.id, req.session.user_id], (err, results) => {
         if (err) throw err;
 
-        res.json({ error: false, message: 'Deleted customer' });
+        // Add 1 to this user's sms balance since they deleted a customer
+        con.query('UPDATE users SET sms_balance=(sms_balance + 1) WHERE users.id=?', [req.session.user_id], (err, results) => {
+            if (err) throw err;
+
+            res.json({ error: false, message: 'Deleted customer' });
+        });
     });
 })
 
