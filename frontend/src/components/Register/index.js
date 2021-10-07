@@ -1,4 +1,3 @@
-import styles from './Register.module.css';
 import { Link, useHistory } from 'react-router-dom';
 import { useState } from 'react';
 import axios from 'axios';
@@ -54,8 +53,8 @@ const Register = () => {
     }
 
     return (
-        <div>
-            <div className="container my-3">
+        <div className="d-flex justify-content-center">
+            <div className="col-4 my-5">
                 <div className="card">
                     <div className="card-body">
                         <h3 className="card-title mb-3">Sign Up for RepTree</h3>
