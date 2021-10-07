@@ -1,12 +1,12 @@
-import { Route, Link } from 'react-router-dom';
 import styles from './Dashboard.module.css';
 
 import CreateCustomer from './CreateCustomer';
 import MyBrand from './MyBrand';
 import Settings from './Settings';
 import AllCustomers from './AllCustomers';
+import Portal from './Portal';
 import { useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useHistory, Route, Link } from 'react-router-dom';
 
 const Dashboard = () => {
 
@@ -33,6 +33,9 @@ const Dashboard = () => {
                 </ul>
             </div>
             <div className={`${styles.main} p-3`}>
+                <Route exact path="/dashboard">
+                    <Portal></Portal>
+                </Route>
                 <Route path="/dashboard/all">
                     <AllCustomers></AllCustomers>
                 </Route>

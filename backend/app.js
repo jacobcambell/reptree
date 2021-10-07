@@ -9,6 +9,7 @@ const twilio = require('twilio');
 const twilio_accountSid = process.env.twilio_accountSid;
 const twilio_authToken = process.env.twilio_authToken;
 const twilio_client = new twilio(twilio_accountSid, twilio_authToken);
+const bitly = require('./bitly.js');
 
 const app = express();
 
@@ -204,8 +205,8 @@ app.post('/cancel-customer', (req, res) => {
         return;
     }
 
-    // Delete the customer from the database, if this user actually owns the id of the customer they sent
-    con.query('DELETE FROM customers WHERE id=? AND owner_id=?', [req.body.id, req.session.user_id], (err, results) => {
+    // Delete the customer from the database, if this user actually owns the id of the customer they sent and the reminder hasn't been sent yet
+    con.query('DELETE FROM customers WHERE id=? AND owner_id=? AND reminder_sent=0', [req.body.id, req.session.user_id], (err, results) => {
         if (err) throw err;
 
         res.json({ error: false, message: 'Deleted customer' });
@@ -528,10 +529,60 @@ app.post('/get-customer-info', (req, res) => {
     });
 })
 
+app.post('/get-analytics', (req, res) => {
+    // total number of customers
+    // total reminders sent
+    // total reminders opened
+
+    // Check if the user is logged in
+    if (typeof req.session.user_id === 'undefined') {
+        res.json({ error: true, message: 'You must be logged in first' });
+        return;
+    }
+
+    // Get this user's analytics
+    let totalCustomers = 0;
+    let remindersSent = 0;
+    let remindersOpened = 0;
+
+    // Total Customers
+    con.query(`SELECT
+                COUNT(*) AS c
+                FROM customers
+                WHERE
+                customers.owner_id=?
+                `, [req.session.user_id], (err, results) => {
+        if (err) throw err;
+
+        totalCustomers = Number(results[0].c);
+
+        // Total Reminders Sent
+        con.query('SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=? AND customers.reminder_sent=1', [req.session.user_id], (err, results) => {
+            if (err) throw err;
+
+            remindersSent = Number(results[0].c);
+
+            // Total Reminders Opened
+            con.query('SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=? AND customers.reminder_sent=1 AND customers.reminder_opened=1', [req.session.user_id], (err, results) => {
+                if (err) throw err;
+
+                remindersOpened = Number(results[0].c);
+
+                res.json({
+                    totalCustomers,
+                    remindersSent,
+                    remindersOpened
+                });
+                return;
+            })
+        });
+    });
+})
+
 // SMS check loop
 setInterval(() => {
     con.query(`SELECT
-    customers.id, customers.name, customers.phone,
+    customers.id AS customer_id, customers.name, customers.phone,
     users.companyname, users.sms_message
     FROM customers, users
     WHERE customers.remind_time < NOW() AND
@@ -556,19 +607,27 @@ setInterval(() => {
             // Replace ((company)) with the user's company name
             message = message.replace('((company))', results[i].companyname);
 
-            // We now have a message with the above fields replaced
+            // Build review link
+            $reviewLink = `${process.env.FRONTEND_BASEURL}/leave-review/${results[i].customer_id}`;
 
-            // Text the customer
-            twilio_client.messages.create({
-                body: message,
-                to: results[i].phone, // Text this number
-                from: process.env.twilio_fromPhone, // From a valid Twilio number
-            })
+            // Get Bitly short link
+            $bitlyLink = bitly.createShortLink($reviewLink)
+                .then((link) => {
+                    // Append Bitly link to end of message
+                    message += ` ${link}`;
 
-            // Update the customer as having been sent the reminder
-            con.query('UPDATE customers SET reminder_sent=1 WHERE customers.id=?', [results[i].id], (err, results) => {
-                if (err) throw err;
-            });
+                    // Text the customer
+                    twilio_client.messages.create({
+                        body: message,
+                        to: results[i].phone, // Text this number
+                        from: process.env.twilio_fromPhone, // From a valid Twilio number
+                    })
+
+                    // Update the customer as having been sent the reminder
+                    con.query('UPDATE customers SET reminder_sent=1 WHERE customers.id=?', [results[i].customer_id], (err, results) => {
+                        if (err) throw err;
+                    });
+                })
         }
     });
-}, 60000);
+}, 5000);
