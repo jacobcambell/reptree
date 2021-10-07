@@ -1,10 +1,12 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import Popup from './Popup/';
 
 const MyBrand = () => {
 
     const [myNetworks, setMyNetworks] = useState(null);
     const [allNetworks, setAllNetworks] = useState(null);
+    const [popupOpen, setPopupOpen] = useState(false);
 
     useEffect(() => {
         updateList();
@@ -97,6 +99,11 @@ const MyBrand = () => {
                     }
                 </tbody>
             </table>
+
+            {
+                popupOpen &&
+                <Popup></Popup>
+            }
         </div>
     );
 }
