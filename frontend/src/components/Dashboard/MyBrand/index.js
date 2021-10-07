@@ -8,6 +8,7 @@ const MyBrand = () => {
     const [allNetworks, setAllNetworks] = useState(null);
     const [popupOpen, setPopupOpen] = useState(false);
 
+    const [selectedNetworkId, setSelectedNetworkId] = useState();
     const [selectedNetworkName, setSelectedNetworkName] = useState('');
 
     useEffect(() => {
@@ -15,17 +16,21 @@ const MyBrand = () => {
     }, []);
 
     const handleUse = (id, networkName) => {
+        setSelectedNetworkId(id);
         setSelectedNetworkName(networkName);
         setPopupOpen(true);
+    }
 
-        // // Note - currently we aren't asking the user for their link
-        // axios.post(process.env.REACT_APP_API_ENDPOINT + '/use-network', {
-        //     id,
-        //     link: 'https://google.com'
-        // }, { withCredentials: true })
-        //     .then(res => {
-        //         updateList();
-        //     })
+    const setNetwork = (link) => {
+        axios.post(process.env.REACT_APP_API_ENDPOINT + '/use-network', {
+            id: selectedNetworkId,
+            link: link
+        }, { withCredentials: true })
+            .then(res => {
+                updateList();
+            })
+
+        setPopupOpen(false);
     }
 
     const handleRemove = (id) => {
@@ -107,7 +112,7 @@ const MyBrand = () => {
 
             {
                 popupOpen &&
-                <Popup networkName={selectedNetworkName} setPopupOpen={setPopupOpen}></Popup>
+                <Popup networkName={selectedNetworkName} setPopupOpen={setPopupOpen} setNetwork={setNetwork}></Popup>
             }
         </div>
     );
