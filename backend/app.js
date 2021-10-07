@@ -78,15 +78,23 @@ app.post('/register', (req, res) => {
             return;
         }
 
-        // Provided email doesn't exist, create it (account will be in demo mode by default)
+        // Provided email doesn't exist, create it (account will have an SMS balance of 3 by default)
         con.query(`INSERT INTO users
-                    (email, password, companyname, demo_mode, demo_texts_remaining, sms_message)
-                    VALUES (?, ?, ?, 1, 3, "Hey ((name)), thanks for visiting ((company)). If you would like, please leave us a review")
+                    (email, password, companyname, sms_balance, sms_message)
+                    VALUES (?, ?, ?, 3, "Hey ((name)), thanks for visiting ((company)). If you would like, please leave us a review")
                     `, [req.body.email, req.body.password, req.body.companyname], (err, results) => {
             if (err) throw err;
 
-            res.json({ error: false });
-            return;
+            // Get ID of this new user
+            con.query('SELECT users.id AS user_id FROM users WHERE email=?', [req.body.email], (err, results) => {
+                if (err) throw err;
+
+                // Make the user logged in right after registration
+                console.log('Logged in ' + results[0].user_id)
+                req.session.user_id = results[0].user_id;
+                res.json({ error: false });
+                return;
+            });
         });
     });
 })
