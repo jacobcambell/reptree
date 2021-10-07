@@ -42,8 +42,8 @@ const Lander = () => {
                 {
                     reviewNetworks &&
                     reviewNetworks.map((network) => (
-                        <a href={network.link} target="_blank" className="card mx-3 col-1 p-3 d-flex text-decoration-none">
-                            <img src={network.icon} alt="" className="img-fluid" />
+                        <a href={network.link} target="_blank" className="card col-4 col-lg-1 m-3 p-3 d-flex text-decoration-none">
+                            <img src={network.icon} className="img-fluid" />
                             <h6 className="align-self-center mt-3">{network.name}</h6>
                         </a>
                     ))
