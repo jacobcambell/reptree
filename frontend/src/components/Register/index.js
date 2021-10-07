@@ -53,8 +53,8 @@ const Register = () => {
     }
 
     return (
-        <div className="d-flex justify-content-center">
-            <div className="col-4 my-5">
+        <div className="container d-flex justify-content-center">
+            <div className="col-10 col-lg-6 my-5">
                 <div className="card">
                     <div className="card-body">
                         <h3 className="card-title mb-3">Sign Up for RepTree</h3>
@@ -85,10 +85,10 @@ const Register = () => {
                         }
 
                         <div className="row">
-                            <div className="col-6 col-lg-3 mb-3 mb-lg-0">
-                                <button onClick={handleForm} className="btn btn-success">Create Account</button>
+                            <div className="col-4">
+                                <button onClick={handleForm} className="btn btn-success">Sign Up</button>
                             </div>
-                            <div className="col-6 col-lg-9 d-flex align-items-center">
+                            <div className="col-8 d-flex align-items-center justify-content-end">
                                 <Link to="/login" className="text-muted">Already have an account?</Link>
                             </div>
                         </div>

@@ -17,24 +17,24 @@ const Portal = () => {
     }, []);
 
     return (
-        <div>
+
+        <div className="row g-0 justify-content-center">
             <h3>Dashboard</h3>
 
-            <div className="row">
-                <div className="card col mx-4 align-items-center bg-primary text-light p-2">
-                    <h6>Number of Customers</h6>
-                    <h2>{analytics.totalCustomers}</h2>
-                </div>
-                <div className="card col mx-4 align-items-center bg-secondary text-light p-2">
-                    <h6 className="align-self-center">Reminders Sent</h6>
-                    <h2>{analytics.remindersSent}</h2>
-                </div>
-                <div className="card col mx-4 align-items-center bg-light text-dark p-2">
-                    <h6>Reminders Opened</h6>
-                    <h2>{analytics.remindersOpened}</h2>
-                </div>
+            <div className="card my-1 col-10 col-md-7 col-lg-4 col-xxl-3 mx-lg-2 bg-primary text-light text-center py-3">
+                <h6>Number of Customers</h6>
+                <h2>{analytics.totalCustomers}</h2>
+            </div>
+            <div className="card my-1 col-10 col-md-7 col-lg-4 col-xxl-3 mx-lg-2 bg-secondary text-light text-center py-3">
+                <h6 className="align-self-center">Reminders Sent</h6>
+                <h2>{analytics.remindersSent}</h2>
+            </div>
+            <div className="card my-1 col-10 col-md-7 col-lg-4 col-xxl-3 mx-lg-2 bg-light text-dark text-center py-3">
+                <h6>Reminders Opened</h6>
+                <h2>{analytics.remindersOpened}</h2>
             </div>
         </div>
+
     );
 }
 

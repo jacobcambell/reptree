@@ -57,58 +57,35 @@ const MyBrand = () => {
     }
 
     return (
-        <div>
+        <div className="container-fluid">
             <h3>My Brand</h3>
 
             <h5>My Review Networks</h5>
             <h6 className="text-muted">Below is a list of all the places customers can leave you a review.</h6>
-            <table className="table">
-                <thead>
-                    <tr className="fw-bold">
-                        <td className="col-2"></td>
-                        <td className="col-8"></td>
-                        <td className="col"></td>
-                        <td className="col"></td>
-                    </tr>
-                </thead>
-                <tbody>
-                    {
-                        myNetworks &&
-                        myNetworks.map((network) => (
-                            <tr key={network.id}>
-                                <td className="align-middle"><img className="img-fluid" src={network.icon} /></td>
-                                <td className="align-middle"><h5 className="fw-normal">{network.name}</h5></td>
-                                <td className="align-middle"><a href={network.link} target="_blank" className="btn btn-success bg-primary">Preview</a></td>
-                                <td className="align-middle"><button onClick={() => { handleRemove(network.id) }} className="btn btn-danger">Remove</button></td>
-                            </tr>
-                        ))
-                    }
-                </tbody>
-            </table>
+            {
+                myNetworks &&
+                myNetworks.map((network) => (
+                    <div className="row g-0 mb-3 border-top border-bottom py-3">
+                        <div className="col-1"><img src={network.icon} className="img-fluid" alt="" /></div>
+                        <div className="col-5 col-md-4 px-3 align-items-center d-flex"><h5>{network.name}</h5></div>
+                        <div className="col-3 col-md-2 col-lg-1 align-items-center d-flex"><a href={network.link} target="_blank" className="btn btn-success bg-primary">Preview</a></div>
+                        <div className="col-3 col-md-2 col-lg-2 align-items-center d-flex"><button onClick={() => { handleRemove(network.id) }} className="btn btn-danger">Remove</button></div>
+                    </div>
+                ))
+            }
 
             <h5 className="mt-5">All Review Networks</h5>
             <h6 className="text-muted">Below is a list of all the review networks you are currently not using.</h6>
-            <table className="table">
-                <thead>
-                    <tr className="fw-bold">
-                        <td className="col-2"></td>
-                        <td className="col-6"></td>
-                        <td className="col"></td>
-                    </tr>
-                </thead>
-                <tbody>
-                    {
-                        allNetworks &&
-                        allNetworks.map((network) => (
-                            <tr key={network.id}>
-                                <td className="align-middle"><img className="img-fluid" src={network.icon} /></td>
-                                <td className="align-middle"><h5 className="fw-normal">{network.name}</h5></td>
-                                <td className="align-middle"><button onClick={() => { handleUse(network.id, network.name) }} className="btn btn-success bg-primary">Use {network.name}</button></td>
-                            </tr>
-                        ))
-                    }
-                </tbody>
-            </table>
+            {
+                allNetworks &&
+                allNetworks.map((network) => (
+                    <div className="row g-0 mb-3 border-top border-bottom py-3">
+                        <div className="col-1"><img src={network.icon} className="img-fluid" alt="" /></div>
+                        <div className="col-5 col-md-4 px-3 align-items-center d-flex"><h5>{network.name}</h5></div>
+                        <div className="col-6 align-items-center d-flex"><button onClick={() => { handleUse(network.id, network.name) }} className="btn btn-success bg-primary">Use {network.name}</button></div>
+                    </div>
+                ))
+            }
 
             {
                 popupOpen &&

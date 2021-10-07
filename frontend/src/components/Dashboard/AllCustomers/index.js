@@ -30,7 +30,7 @@ const AllCustomers = () => {
     }
 
     return (
-        <div>
+        <div className="container-fluid">
             <h3>All Customers</h3>
 
             <table className="table">

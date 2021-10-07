@@ -2,13 +2,9 @@ $navWidth: 300px;
 
 .nav {
     height: 100vh;
-    width: $navWidth;
-    float: left;
 }
 
 .main {
     height: 100vh;
-    width: calc(100vw - #{$navWidth} - 50px);
-    float: left;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
