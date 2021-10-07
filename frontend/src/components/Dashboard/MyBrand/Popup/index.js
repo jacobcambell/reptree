@@ -19,7 +19,7 @@ const Popup = ({ networkName, setPopupOpen, setNetwork }) => {
                 <button onClick={closePopup} type="button" class="btn-close align-self-end"></button>
                 <h4>Enter {networkName} Link</h4>
                 <h5 className="text-muted fw-normal">This is the link your customers will be sent to when they click your {networkName} button.</h5>
-                <input onChange={(e) => { setLink(e.target.value) }} type="text" className="form-control my-3" placeholder={`${networkName} Link`} />
+                <input onChange={(e) => { setLink(e.target.value) }} type="text" className="form-control my-3" placeholder={`Your ${networkName} Link`} />
                 <button onClick={handleSubmit} className="btn btn-primary">Submit</button>
             </div>
         </div>
