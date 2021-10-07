@@ -581,7 +581,7 @@ app.post('/get-analytics', (req, res) => {
 // SMS check loop
 setInterval(() => {
     con.query(`SELECT
-    customers.id, customers.name, customers.phone,
+    customers.id AS customer_id, customers.name, customers.phone,
     users.companyname, users.sms_message
     FROM customers, users
     WHERE customers.remind_time < NOW() AND
@@ -606,6 +606,9 @@ setInterval(() => {
             // Replace ((company)) with the user's company name
             message = message.replace('((company))', results[i].companyname);
 
+            // Append review link to end of message
+            message += ` ${process.env.FRONTEND_BASEURL}/leave-review/${results[i].customer_id}`;
+
             // We now have a message with the above fields replaced
 
             // Text the customer
@@ -616,7 +619,7 @@ setInterval(() => {
             })
 
             // Update the customer as having been sent the reminder
-            con.query('UPDATE customers SET reminder_sent=1 WHERE customers.id=?', [results[i].id], (err, results) => {
+            con.query('UPDATE customers SET reminder_sent=1 WHERE customers.id=?', [results[i].customer_id], (err, results) => {
                 if (err) throw err;
             });
         }
