@@ -204,8 +204,8 @@ app.post('/cancel-customer', (req, res) => {
         return;
     }
 
-    // Delete the customer from the database, if this user actually owns the id of the customer they sent
-    con.query('DELETE FROM customers WHERE id=? AND owner_id=?', [req.body.id, req.session.user_id], (err, results) => {
+    // Delete the customer from the database, if this user actually owns the id of the customer they sent and the reminder hasn't been sent yet
+    con.query('DELETE FROM customers WHERE id=? AND owner_id=? AND reminder_sent=0', [req.body.id, req.session.user_id], (err, results) => {
         if (err) throw err;
 
         res.json({ error: false, message: 'Deleted customer' });
