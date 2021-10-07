@@ -8,19 +8,24 @@ const MyBrand = () => {
     const [allNetworks, setAllNetworks] = useState(null);
     const [popupOpen, setPopupOpen] = useState(false);
 
+    const [selectedNetworkName, setSelectedNetworkName] = useState('');
+
     useEffect(() => {
         updateList();
     }, []);
 
-    const handleUse = (id) => {
-        // Note - currently we aren't asking the user for their link
-        axios.post(process.env.REACT_APP_API_ENDPOINT + '/use-network', {
-            id,
-            link: 'https://google.com'
-        }, { withCredentials: true })
-            .then(res => {
-                updateList();
-            })
+    const handleUse = (id, networkName) => {
+        setSelectedNetworkName(networkName);
+        setPopupOpen(true);
+
+        // // Note - currently we aren't asking the user for their link
+        // axios.post(process.env.REACT_APP_API_ENDPOINT + '/use-network', {
+        //     id,
+        //     link: 'https://google.com'
+        // }, { withCredentials: true })
+        //     .then(res => {
+        //         updateList();
+        //     })
     }
 
     const handleRemove = (id) => {
@@ -93,7 +98,7 @@ const MyBrand = () => {
                             <tr key={network.id}>
                                 <td className="align-middle"><img className="img-fluid" src={network.icon} /></td>
                                 <td className="align-middle"><h5 className="fw-normal">{network.name}</h5></td>
-                                <td className="align-middle"><button onClick={() => { handleUse(network.id) }} className="btn btn-success bg-primary">Use {network.name}</button></td>
+                                <td className="align-middle"><button onClick={() => { handleUse(network.id, network.name) }} className="btn btn-success bg-primary">Use {network.name}</button></td>
                             </tr>
                         ))
                     }
@@ -102,7 +107,7 @@ const MyBrand = () => {
 
             {
                 popupOpen &&
-                <Popup></Popup>
+                <Popup networkName={selectedNetworkName}></Popup>
             }
         </div>
     );
