@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:8889
--- Generation Time: Oct 05, 2021 at 12:49 AM
+-- Generation Time: Oct 07, 2021 at 04:20 AM
 -- Server version: 5.7.34
 -- PHP Version: 7.4.21
 
@@ -38,7 +38,7 @@ CREATE TABLE `customers` (
   `remind_time` datetime NOT NULL,
   `reminder_sent` tinyint(1) NOT NULL,
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `reminder_opened` tinyint(1) NOT NULL,
+  `reminder_opened` tinyint(1) NOT NULL DEFAULT '0',
   `reminder_open_time` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -90,7 +90,8 @@ CREATE TABLE `users` (
   `email` varchar(100) NOT NULL,
   `password` varchar(100) NOT NULL,
   `companyname` varchar(100) NOT NULL,
-  `sms_message` text NOT NULL
+  `sms_message` text NOT NULL,
+  `sms_balance` int(11) NOT NULL DEFAULT '3'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --

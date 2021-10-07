@@ -20,9 +20,9 @@ const Dashboard = () => {
     });
 
     return (
-        <div>
-            <div className={`${styles.nav} d-flex flex-column navbar-dark bg-dark p-3`}>
-                <Link className="navbar-brand mb-3" to="/dashboard">RepTree</Link>
+        <div className="row g-0">
+            <div className={`${styles.nav} d-none d-xxl-block navbar-dark bg-dark col-12 col-xxl-2`}>
+                <Link className="d-table navbar-brand px-3 py-3" to="/dashboard">RepTree</Link>
 
                 <ul className="nav nav-pills flex-column">
                     <Link to="/dashboard" className="nav-link text-white" aria-current="page"><i className="fas fa-signal pe-2"></i>Dashboard</Link>
@@ -32,7 +32,7 @@ const Dashboard = () => {
                     <Link to="/dashboard/settings" className="nav-link text-white"><i className="fas fa-cog pe-2"></i>Settings</Link>
                 </ul>
             </div>
-            <div className={`${styles.main} p-3`}>
+            <div className={`${styles.main} col-12 col-xxl p-3`}>
                 <Route exact path="/dashboard">
                     <Portal></Portal>
                 </Route>
@@ -49,7 +49,7 @@ const Dashboard = () => {
                     <Settings></Settings>
                 </Route>
             </div>
-        </div>
+        </div >
     );
 }
 

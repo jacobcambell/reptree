@@ -1,13 +1,9 @@
 .nav {
   height: 100vh;
-  width: 300px;
-  float: left;
 }
 
 .main {
   height: 100vh;
-  width: calc(100vw - 300px - 50px);
-  float: left;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 /*# sourceMappingURL=Dashboard.module.css.map */

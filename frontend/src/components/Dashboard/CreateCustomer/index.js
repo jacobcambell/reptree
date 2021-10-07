@@ -37,11 +37,11 @@ const CreateCustomer = () => {
     }
 
     return (
-        <div>
+        <div className="container-fluid">
             <h3>Create Customer</h3>
 
             <div className="row">
-                <div className="col col-xl-8">
+                <div className="col col-md-8 col-xl-6 col-xxl-4">
                     <label>Customer's Name</label>
                     <input onChange={(e) => { setName(e.target.value) }} type="text" className="form-control mb-3" />
 

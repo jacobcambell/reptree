@@ -62,6 +62,12 @@ app.post('/register', (req, res) => {
         return;
     }
 
+    // Check valid email
+    if (!validateEmail(req.body.email)) {
+        res.json({ error: true, message: 'Please provide a valid email address.' });
+        return;
+    }
+
     // Does the provided email exist in the database?
     con.query('SELECT COUNT(*) AS c FROM users WHERE email=?', [req.body.email], (err, results) => {
         if (err) throw err;
@@ -72,12 +78,23 @@ app.post('/register', (req, res) => {
             return;
         }
 
-        // Provided email doesn't exist, create it
-        con.query('INSERT INTO users (email, password, companyname) VALUES (?, ?, ?)', [req.body.email, req.body.password, req.body.companyname], (err, results) => {
+        // Provided email doesn't exist, create it (account will have an SMS balance of 3 by default)
+        con.query(`INSERT INTO users
+                    (email, password, companyname, sms_balance, sms_message)
+                    VALUES (?, ?, ?, 3, "Hey ((name)), thanks for visiting ((company)). If you would like, please leave us a review")
+                    `, [req.body.email, req.body.password, req.body.companyname], (err, results) => {
             if (err) throw err;
 
-            res.json({ error: false });
-            return;
+            // Get ID of this new user
+            con.query('SELECT users.id AS user_id FROM users WHERE email=?', [req.body.email], (err, results) => {
+                if (err) throw err;
+
+                // Make the user logged in right after registration
+                console.log('Logged in ' + results[0].user_id)
+                req.session.user_id = results[0].user_id;
+                res.json({ error: false });
+                return;
+            });
         });
     });
 })
@@ -152,12 +169,28 @@ app.post('/create-customer', (req, res) => {
         return;
     }
 
-    // Create customer using the provided values
-    con.query('INSERT INTO customers (owner_id, name, phone, remind_time, reminder_sent, create_time) VALUES (?, ?, ?, NOW() + INTERVAL ? HOUR, 0, NOW())', [req.session.user_id, req.body.name, req.body.phone, req.body.time], (err, results) => {
+    // Check user's sms balance
+    con.query('SELECT users.sms_balance FROM users WHERE users.id=?', [req.session.user_id], (err, results) => {
         if (err) throw err;
 
-        res.json({ error: false, message: 'Successfully created customer' });
-        return;
+        if (results[0].sms_balance < 1) {
+            // User cannot add this customer because their balance is too low
+            res.json({ error: true, message: 'You cannot create this customer because your balance is too low.' });
+            return;
+        }
+
+        // Create customer using the provided values
+        con.query('INSERT INTO customers (owner_id, name, phone, remind_time, reminder_sent, create_time) VALUES (?, ?, ?, NOW() + INTERVAL ? HOUR, 0, NOW())', [req.session.user_id, req.body.name, req.body.phone, req.body.time], (err, results) => {
+            if (err) throw err;
+
+            // Subtract one from user's SMS balance
+            con.query('UPDATE users SET sms_balance=(sms_balance - 1) WHERE users.id=?', [req.session.user_id], (err, results) => {
+                if (err) throw err;
+
+                res.json({ error: false, message: 'Successfully created customer' });
+                return;
+            });
+        });
     });
 })
 
@@ -209,7 +242,12 @@ app.post('/cancel-customer', (req, res) => {
     con.query('DELETE FROM customers WHERE id=? AND owner_id=? AND reminder_sent=0', [req.body.id, req.session.user_id], (err, results) => {
         if (err) throw err;
 
-        res.json({ error: false, message: 'Deleted customer' });
+        // Add 1 to this user's sms balance since they deleted a customer
+        con.query('UPDATE users SET sms_balance=(sms_balance + 1) WHERE users.id=?', [req.session.user_id], (err, results) => {
+            if (err) throw err;
+
+            res.json({ error: false, message: 'Deleted customer' });
+        });
     });
 })
 
@@ -630,4 +668,10 @@ setInterval(() => {
                 })
         }
     });
-}, 5000);
+}, 10000);
+
+// From: https://stackoverflow.com/questions/46155/how-to-validate-an-email-address-in-javascript
+const validateEmail = (email) => {
+    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+}
