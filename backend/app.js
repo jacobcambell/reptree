@@ -62,6 +62,12 @@ app.post('/register', (req, res) => {
         return;
     }
 
+    // Check valid email
+    if (!validateEmail(req.body.email)) {
+        res.json({ error: true, message: 'Please provide a valid email address.' });
+        return;
+    }
+
     // Does the provided email exist in the database?
     con.query('SELECT COUNT(*) AS c FROM users WHERE email=?', [req.body.email], (err, results) => {
         if (err) throw err;
@@ -72,8 +78,11 @@ app.post('/register', (req, res) => {
             return;
         }
 
-        // Provided email doesn't exist, create it
-        con.query('INSERT INTO users (email, password, companyname) VALUES (?, ?, ?)', [req.body.email, req.body.password, req.body.companyname], (err, results) => {
+        // Provided email doesn't exist, create it (account will be in demo mode by default)
+        con.query(`INSERT INTO users
+                    (email, password, companyname, demo_mode, demo_texts_remaining, sms_message)
+                    VALUES (?, ?, ?, 1, 3, "Hey ((name)), thanks for visiting ((company)). If you would like, please leave us a review")
+                    `, [req.body.email, req.body.password, req.body.companyname], (err, results) => {
             if (err) throw err;
 
             res.json({ error: false });
@@ -630,4 +639,10 @@ setInterval(() => {
                 })
         }
     });
-}, 5000);
+}, 10000);
+
+// From: https://stackoverflow.com/questions/46155/how-to-validate-an-email-address-in-javascript
+const validateEmail = (email) => {
+    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+}
