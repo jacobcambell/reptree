@@ -169,12 +169,28 @@ app.post('/create-customer', (req, res) => {
         return;
     }
 
-    // Create customer using the provided values
-    con.query('INSERT INTO customers (owner_id, name, phone, remind_time, reminder_sent, create_time) VALUES (?, ?, ?, NOW() + INTERVAL ? HOUR, 0, NOW())', [req.session.user_id, req.body.name, req.body.phone, req.body.time], (err, results) => {
+    // Check user's sms balance
+    con.query('SELECT users.sms_balance FROM users WHERE users.id=?', [req.session.user_id], (err, results) => {
         if (err) throw err;
 
-        res.json({ error: false, message: 'Successfully created customer' });
-        return;
+        if (results[0].sms_balance < 1) {
+            // User cannot add this customer because their balance is too low
+            res.json({ error: true, message: 'You cannot create this customer because your balance is too low.' });
+            return;
+        }
+
+        // Create customer using the provided values
+        con.query('INSERT INTO customers (owner_id, name, phone, remind_time, reminder_sent, create_time) VALUES (?, ?, ?, NOW() + INTERVAL ? HOUR, 0, NOW())', [req.session.user_id, req.body.name, req.body.phone, req.body.time], (err, results) => {
+            if (err) throw err;
+
+            // Subtract one from user's SMS balance
+            con.query('UPDATE users SET sms_balance=(sms_balance - 1) WHERE users.id=?', [req.session.user_id], (err, results) => {
+                if (err) throw err;
+
+                res.json({ error: false, message: 'Successfully created customer' });
+                return;
+            });
+        });
     });
 })
 
