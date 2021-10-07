@@ -39,7 +39,7 @@ const Register = () => {
             email,
             password,
             companyname
-        })
+        }, { withCredentials: true })
             .then((res) => {
                 if (res.data.error) {
                     setErrormessage(res.data.message);
