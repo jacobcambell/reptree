@@ -23,7 +23,8 @@ const Dashboard = () => {
     return (
         <div className="row g-0">
             <Nav></Nav>
-            <div className={`${styles.main} col-12 col-xxl p-3`}>
+
+            <div className={`${styles.main} col-12 col-lg-10 p-3`}>
                 <Route exact path="/dashboard">
                     <Portal></Portal>
                 </Route>
