@@ -40,11 +40,11 @@ const Nav = () => {
                     height: '100%',
                     zIndex: 100
                 }} className="bg-dark p-3">
-                    <Link onClick={closeMenu} to="/dashboard" className="d-block mb-1 text-decoration-none text-white" aria-current="page"><i className="fas fa-signal pe-2"></i>Dashboard</Link>
-                    <Link onClick={closeMenu} to="/dashboard/all" className="d-block mb-1 text-decoration-none text-white"><i className="fas fa-users pe-2"></i>All Customers</Link>
-                    <Link onClick={closeMenu} to="/dashboard/create-customer" className="d-block mb-1  text-decoration-none text-white"><i className="far fa-plus-square pe-2"></i>Create Customer</Link>
-                    <Link onClick={closeMenu} to="/dashboard/my-brand" className="d-block mb-1 text-decoration-none text-white"><i className="fas fa-star pe-2"></i>My Brand</Link>
-                    <Link onClick={closeMenu} to="/dashboard/settings" className="d-block mb-1  text-decoration-none text-white"><i className="fas fa-cog pe-2"></i>Settings</Link>
+                    <Link onClick={closeMenu} to="/dashboard" className="d-block py-3 border-top border-bottom col-12 mb-1 text-decoration-none text-white" aria-current="page"><i className="fas fa-signal pe-2"></i>Dashboard</Link>
+                    <Link onClick={closeMenu} to="/dashboard/all" className="d-block py-3 border-bottom mb-1 text-decoration-none text-white"><i className="fas fa-users pe-2"></i>All Customers</Link>
+                    <Link onClick={closeMenu} to="/dashboard/create-customer" className="d-block py-3 border-bottom mb-1 text-decoration-none text-white"><i className="far fa-plus-square pe-2"></i>Create Customer</Link>
+                    <Link onClick={closeMenu} to="/dashboard/my-brand" className="d-block py-3 border-bottom mb-1 text-decoration-none text-white"><i className="fas fa-star pe-2"></i>My Brand</Link>
+                    <Link onClick={closeMenu} to="/dashboard/settings" className="d-block py-3 border-bottom mb-1 text-decoration-none text-white"><i className="fas fa-cog pe-2"></i>Settings</Link>
                 </div>
             }
         </div>
