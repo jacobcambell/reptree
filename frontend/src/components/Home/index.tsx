@@ -16,14 +16,14 @@ const Home = () => {
                         </div>
                     </div>
                     <div className="col-6 d-none d-lg-block">
-                        <img src="/images/home-1.jpg" alt="" className="img-fluid" />
+                        <img src="https://imgur.com/QeCGmdV.jpg" alt="" className="img-fluid" />
                     </div>
                 </div>
             </div>
             <div className="container my-5">
                 <div className="row">
                     <div className="col-4 d-none d-lg-block">
-                        <img src="/images/home-2.jpg" alt="" className="img-fluid" />
+                        <img src="https://imgur.com/hAHRrvx.jpg" alt="" className="img-fluid" />
                     </div>
                     <div className="col d-flex align-items-center px-5 text-center text-lg-start">
                         <div>
