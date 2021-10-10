@@ -3,7 +3,7 @@ import styles from './Jumbo.module.css';
 
 const Jumbo = () => {
     return (
-        <div className={styles.jumbo} style={{ backgroundImage: 'url(/images/jumbo-background.jpg)' }}>
+        <div className={styles.jumbo} style={{ backgroundImage: 'url(https://imgur.com/8M4XxPM.jpg)' }}>
             <div className={styles.overlay}>
                 <div className="d-flex h-100 align-items-center text-center text-lg-start">
                     <div className="container text-white">
