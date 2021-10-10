@@ -23,7 +23,7 @@ const Home = () => {
             <div className="container my-5">
                 <div className="row">
                     <div className="col-4 d-none d-lg-block">
-                        <img src="https://imgur.com/0R9lX4A.jpg" alt="" className="img-fluid" />
+                        <img src="https://imgur.com/hAHRrvx.jpg" alt="" className="img-fluid" />
                     </div>
                     <div className="col d-flex align-items-center px-5 text-center text-lg-start">
                         <div>
