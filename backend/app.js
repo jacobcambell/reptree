@@ -660,11 +660,15 @@ setInterval(() => {
                         to: results[i].phone, // Text this number
                         from: process.env.twilio_fromPhone, // From a valid Twilio number
                     })
-
-                    // Update the customer as having been sent the reminder
-                    con.query('UPDATE customers SET reminder_sent=1 WHERE customers.id=?', [results[i].customer_id], (err, results) => {
-                        if (err) throw err;
-                    });
+                        .then(() => {
+                            // Update the customer as having been sent the reminder
+                            con.query('UPDATE customers SET reminder_sent=1 WHERE customers.id=?', [results[i].customer_id], (err, results) => {
+                                if (err) throw err;
+                            });
+                        })
+                        .catch(e => {
+                            console.log(e)
+                        })
                 })
         }
     });
