@@ -670,6 +670,9 @@ setInterval(() => {
                             console.log(e)
                         })
                 })
+                .catch(e => {
+                    console.log(e)
+                })
         }
     });
 }, 10000);
