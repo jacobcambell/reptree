@@ -3,6 +3,17 @@ $navWidth: 300px;
 .nav {
     // height: 100vh;
     // height: 100px;
+
+    .dropdown {
+        background: rgb(0, 0, 0);
+        color: white;
+        height: 100vh;
+        width: 100%;
+        position: fixed;
+        left: 0;
+        top: 42px;
+        z-index: 1;
+    }
 }
 
 .main {
