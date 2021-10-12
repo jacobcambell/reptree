@@ -35,7 +35,7 @@ const Login = () => {
                 }
                 else {
                     setSuccessmessage('Successfully logged in, redirecting...');
-                    sessionStorage.setItem('logged_in', 'true');
+                    localStorage.setItem('access_token', res.data.access_token);
 
                     setTimeout(() => {
                         history.push('/dashboard');
