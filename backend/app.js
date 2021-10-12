@@ -12,6 +12,7 @@ const twilio_client = new twilio(twilio_accountSid, twilio_authToken);
 const bitly = require('./bitly.js');
 
 const app = express();
+const jwt = require('jsonwebtoken');
 
 const con = mysql.createConnection({
     host: process.env.DB_HOST,
@@ -134,7 +135,10 @@ app.post('/login', (req, res) => {
         else {
             // Successful login
             req.session.user_id = results[0].id;
-            res.json({ error: false });
+
+            // Generate JSON Web Token for this user
+            const token = jwt.sign({ user_id: results[0].id }, process.env.JWT_SECRET);
+            res.json({ error: false, access_token: token });
             return;
         }
     });
