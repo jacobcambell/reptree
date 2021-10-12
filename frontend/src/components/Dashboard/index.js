@@ -15,7 +15,7 @@ const Dashboard = () => {
 
     useEffect(() => {
         // Check if user has logged in status saved to their session
-        if (sessionStorage.getItem('logged_in') === null) {
+        if (localStorage.getItem('access_token') === null) {
             history.push('/login');
         }
     });

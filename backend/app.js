@@ -3,7 +3,6 @@ require('dotenv').config();
 const express = require('express')
 const cors = require('cors');
 const mysql = require('mysql');
-const session = require('express-session');
 
 const twilio = require('twilio');
 const twilio_accountSid = process.env.twilio_accountSid;
@@ -12,6 +11,8 @@ const twilio_client = new twilio(twilio_accountSid, twilio_authToken);
 const bitly = require('./bitly.js');
 
 const app = express();
+const jwt = require('jsonwebtoken');
+const AuthCheck = require('./AuthCheck');
 
 const con = mysql.createConnection({
     host: process.env.DB_HOST,
@@ -29,12 +30,6 @@ const corsOptions = {
 }
 
 app.use(cors(corsOptions));
-app.use(session({
-    secret: 'supersecret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: false }
-}));
 app.use(express.json());
 
 app.post('/register', (req, res) => {
@@ -86,13 +81,13 @@ app.post('/register', (req, res) => {
             if (err) throw err;
 
             // Get ID of this new user
-            con.query('SELECT users.id AS user_id FROM users WHERE email=?', [req.body.email], (err, results) => {
+            con.query('SELECT users.id FROM users WHERE email=?', [req.body.email], (err, results) => {
                 if (err) throw err;
 
                 // Make the user logged in right after registration
-                console.log('Logged in ' + results[0].user_id)
-                req.session.user_id = results[0].user_id;
-                res.json({ error: false });
+
+                const token = jwt.sign({ user_id: results[0].id }, process.env.JWT_SECRET);
+                res.json({ error: false, access_token: token });
                 return;
             });
         });
@@ -132,344 +127,340 @@ app.post('/login', (req, res) => {
             return;
         }
         else {
-            // Successful login
-            req.session.user_id = results[0].id;
-            res.json({ error: false });
+            // Generate JSON Web Token for this user
+            const token = jwt.sign({ user_id: results[0].id }, process.env.JWT_SECRET);
+            res.json({ error: false, access_token: token });
             return;
         }
     });
 })
 
 app.post('/create-customer', (req, res) => {
-    // Check if the user is logged in
-    if (typeof req.session.user_id === 'undefined') {
-        res.json({ error: true, message: 'You must be logged in first' });
-        return;
-    }
+    AuthCheck(req.headers.authorization)
+        .then((user_id) => {
+            // Check params
+            const check = [
+                req.body.name,
+                req.body.phone,
+                req.body.time
+            ];
 
-    // Check params
-    const check = [
-        req.body.name,
-        req.body.phone,
-        req.body.time
-    ];
+            if (check.includes(undefined)) {
+                res.json({ error: true, message: 'Please include all the required values' });
+                return;
+            }
 
-    if (check.includes(undefined)) {
-        res.json({ error: true, message: 'Please include all the required values' });
-        return;
-    }
+            // Name, phone and time should be more than 0 chars
+            if (
+                req.body.name.length === 0 ||
+                req.body.phone.length === 0 ||
+                req.body.time.length === 0
+            ) {
+                res.json({ error: true, message: 'Please enter a value in each field' });
+                return;
+            }
 
-    // Name, phone and time should be more than 0 chars
-    if (
-        req.body.name.length === 0 ||
-        req.body.phone.length === 0 ||
-        req.body.time.length === 0
-    ) {
-        res.json({ error: true, message: 'Please enter a value in each field' });
-        return;
-    }
-
-    // Check user's sms balance
-    con.query('SELECT users.sms_balance FROM users WHERE users.id=?', [req.session.user_id], (err, results) => {
-        if (err) throw err;
-
-        if (results[0].sms_balance < 1) {
-            // User cannot add this customer because their balance is too low
-            res.json({ error: true, message: 'You cannot create this customer because your balance is too low.' });
-            return;
-        }
-
-        // Create customer using the provided values
-        con.query('INSERT INTO customers (owner_id, name, phone, remind_time, reminder_sent, create_time) VALUES (?, ?, ?, NOW() + INTERVAL ? HOUR, 0, NOW())', [req.session.user_id, req.body.name, req.body.phone, req.body.time], (err, results) => {
-            if (err) throw err;
-
-            // Subtract one from user's SMS balance
-            con.query('UPDATE users SET sms_balance=(sms_balance - 1) WHERE users.id=?', [req.session.user_id], (err, results) => {
+            // Check user's sms balance
+            con.query('SELECT users.sms_balance FROM users WHERE users.id=?', [user_id], (err, results) => {
                 if (err) throw err;
 
-                res.json({ error: false, message: 'Successfully created customer' });
-                return;
+                if (results[0].sms_balance < 1) {
+                    // User cannot add this customer because their balance is too low
+                    res.json({ error: true, message: 'You cannot create this customer because your balance is too low.' });
+                    return;
+                }
+
+                // Create customer using the provided values
+                con.query('INSERT INTO customers (owner_id, name, phone, remind_time, reminder_sent, create_time) VALUES (?, ?, ?, NOW() + INTERVAL ? HOUR, 0, NOW())', [user_id, req.body.name, req.body.phone, req.body.time], (err, results) => {
+                    if (err) throw err;
+
+                    // Subtract one from user's SMS balance
+                    con.query('UPDATE users SET sms_balance=(sms_balance - 1) WHERE users.id=?', [user_id], (err, results) => {
+                        if (err) throw err;
+
+                        res.json({ error: false, message: 'Successfully created customer' });
+                        return;
+                    });
+                });
             });
-        });
-    });
+        })
+        .catch(() => {
+            res.sendStatus(401);
+        })
 })
 
 app.post('/get-my-customers', (req, res) => {
-    // Check if the user is logged in
-    if (typeof req.session.user_id === 'undefined') {
-        res.json({ error: true, message: 'You must be logged in first' });
-        return;
-    }
+    AuthCheck(req.headers.authorization)
+        .then((user_id) => {
+            // Grab all customers belonging to this user by their id
+            con.query('SELECT id, name, phone, TIMESTAMPDIFF(MINUTE, NOW(), remind_time) AS time, reminder_sent FROM customers WHERE owner_id=? ORDER BY create_time DESC', [user_id], (err, results) => {
+                if (err) throw err;
 
-    // Grab all customers belonging to this user by their id
-    con.query('SELECT id, name, phone, TIMESTAMPDIFF(MINUTE, NOW(), remind_time) AS time, reminder_sent FROM customers WHERE owner_id=? ORDER BY create_time DESC', [req.session.user_id], (err, results) => {
-        if (err) throw err;
+                let customers = [];
 
-        let customers = [];
+                for (let i = 0; i < results.length; i++) {
+                    customers.push({
+                        id: results[i].id,
+                        name: results[i].name,
+                        phone: results[i].phone,
+                        time: results[i].time,
+                        reminder_sent: results[i].reminder_sent
+                    });
+                }
 
-        for (let i = 0; i < results.length; i++) {
-            customers.push({
-                id: results[i].id,
-                name: results[i].name,
-                phone: results[i].phone,
-                time: results[i].time,
-                reminder_sent: results[i].reminder_sent
+                res.json(customers);
             });
-        }
-
-        res.json(customers);
-    });
+        })
+        .catch(() => {
+            res.sendStatus(401);
+        })
 })
 
 app.post('/cancel-customer', (req, res) => {
-    // Check if the user is logged in
-    if (typeof req.session.user_id === 'undefined') {
-        res.json({ error: true, message: 'You must be logged in first' });
-        return;
-    }
+    AuthCheck(req.headers.authorization)
+        .then((user_id) => {
+            // Check params
+            const check = [
+                req.body.id
+            ];
 
-    // Check params
-    const check = [
-        req.body.id
-    ];
+            if (check.includes(undefined)) {
+                res.json({ error: true, message: 'Please include all the required values' });
+                return;
+            }
 
-    if (check.includes(undefined)) {
-        res.json({ error: true, message: 'Please include all the required values' });
-        return;
-    }
+            // Delete the customer from the database, if this user actually owns the id of the customer they sent and the reminder hasn't been sent yet
+            con.query('DELETE FROM customers WHERE id=? AND owner_id=? AND reminder_sent=0', [req.body.id, user_id], (err, results) => {
+                if (err) throw err;
 
-    // Delete the customer from the database, if this user actually owns the id of the customer they sent and the reminder hasn't been sent yet
-    con.query('DELETE FROM customers WHERE id=? AND owner_id=? AND reminder_sent=0', [req.body.id, req.session.user_id], (err, results) => {
-        if (err) throw err;
+                // Add 1 to this user's sms balance since they deleted a customer
+                con.query('UPDATE users SET sms_balance=(sms_balance + 1) WHERE users.id=?', [user_id], (err, results) => {
+                    if (err) throw err;
 
-        // Add 1 to this user's sms balance since they deleted a customer
-        con.query('UPDATE users SET sms_balance=(sms_balance + 1) WHERE users.id=?', [req.session.user_id], (err, results) => {
-            if (err) throw err;
-
-            res.json({ error: false, message: 'Deleted customer' });
-        });
-    });
+                    res.json({ error: false, message: 'Deleted customer' });
+                });
+            });
+        })
+        .catch(() => {
+            res.sendStatus(401);
+        })
 })
 
 app.post('/get-all-review-networks', (req, res) => {
-    // Check if the user is logged in
-    if (typeof req.session.user_id === 'undefined') {
-        res.json({ error: true, message: 'You must be logged in first' });
-        return;
-    }
+    AuthCheck(req.headers.authorization)
+        .then((user_id) => {
+            // Get a list of all the review networks, without any the user is currently using
+            con.query(`SELECT
+                        review_network_list.id AS id,
+                        review_network_list.name AS name,
+                        review_network_list.icon AS icon
+                        FROM review_network_list
+                        WHERE
+                        review_network_list.id NOT IN (
+                            SELECT review_networks.network_id FROM review_networks
+                            WHERE
+                            review_networks.owner_id=?
+                        )
+                        `,
+                [user_id],
+                (err, results) => {
+                    if (err) throw err;
 
-    // Get a list of all the review networks, without any the user is currently using
-    con.query(`SELECT
-                review_network_list.id AS id,
-                review_network_list.name AS name,
-                review_network_list.icon AS icon
-                FROM review_network_list
-                WHERE
-                review_network_list.id NOT IN (
-                    SELECT review_networks.network_id FROM review_networks
-                    WHERE
-                    review_networks.owner_id=?
-                )
-                `,
-        [req.session.user_id],
-        (err, results) => {
-            if (err) throw err;
+                    let networks = [];
 
-            let networks = [];
+                    for (let i = 0; i < results.length; i++) {
+                        networks.push({
+                            id: results[i].id,
+                            name: results[i].name,
+                            icon: results[i].icon
+                        });
+                    }
 
-            for (let i = 0; i < results.length; i++) {
-                networks.push({
-                    id: results[i].id,
-                    name: results[i].name,
-                    icon: results[i].icon
+                    res.json(networks);
                 });
-            }
-
-            res.json(networks);
-        });
+        })
+        .catch(() => {
+            res.sendStatus(401);
+        })
 })
 
 app.post('/get-my-review-networks', (req, res) => {
-    // Check if the user is logged in
-    if (typeof req.session.user_id === 'undefined') {
-        res.json({ error: true, message: 'You must be logged in first' });
-        return;
-    }
+    AuthCheck(req.headers.authorization)
+        .then((user_id) => {
+            // Get a list of all the review networks belonging to the user
+            con.query(`SELECT
+                        review_network_list.id AS id,
+                        review_network_list.name AS name,
+                        review_network_list.icon AS icon,
+                        review_networks.link AS link
+                        FROM review_network_list, review_networks
+                        WHERE review_network_list.id=review_networks.network_id AND
+                        review_networks.owner_id=?`,
+                [user_id],
+                (err, results) => {
+                    if (err) throw err;
 
-    // Get a list of all the review networks belonging to the user
-    con.query(`SELECT
-                review_network_list.id AS id,
-                review_network_list.name AS name,
-                review_network_list.icon AS icon,
-                review_networks.link AS link
-                FROM review_network_list, review_networks
-                WHERE review_network_list.id=review_networks.network_id AND
-                review_networks.owner_id=?`,
-        [req.session.user_id],
-        (err, results) => {
-            if (err) throw err;
+                    let networks = [];
 
-            let networks = [];
+                    for (let i = 0; i < results.length; i++) {
+                        networks.push({
+                            id: results[i].id,
+                            name: results[i].name,
+                            icon: results[i].icon,
+                            link: results[i].link
+                        });
+                    }
 
-            for (let i = 0; i < results.length; i++) {
-                networks.push({
-                    id: results[i].id,
-                    name: results[i].name,
-                    icon: results[i].icon,
-                    link: results[i].link
+                    res.json(networks);
                 });
-            }
-
-            res.json(networks);
-        });
+        })
+        .catch(() => {
+            res.sendStatus(401);
+        })
 })
 
 app.post('/use-network', (req, res) => {
-    // Check if the user is logged in
-    if (typeof req.session.user_id === 'undefined') {
-        res.json({ error: true, message: 'You must be logged in first' });
-        return;
-    }
+    AuthCheck(req.headers.authorization)
+        .then((user_id) => {
+            // Check params
+            const check = [
+                req.body.id,
+                req.body.link
+            ];
 
-    // Check params
-    const check = [
-        req.body.id,
-        req.body.link
-    ];
+            if (check.includes(undefined)) {
+                res.json({ error: true, message: 'Please include all the required values' });
+                return;
+            }
 
-    if (check.includes(undefined)) {
-        res.json({ error: true, message: 'Please include all the required values' });
-        return;
-    }
+            // Check if user is already using this review network
+            con.query('SELECT COUNT(*) AS c FROM review_networks WHERE owner_id=? AND network_id=?', [user_id, req.body.id], (err, results) => {
+                if (results[0].c > 0) {
+                    // User is already using this review network
+                    res.json({ error: true, message: 'You are already using this review network' });
+                    return;
+                }
 
-    // Check if user is already using this review network
-    con.query('SELECT COUNT(*) AS c FROM review_networks WHERE owner_id=? AND network_id=?', [req.session.user_id, req.body.id], (err, results) => {
-        if (results[0].c > 0) {
-            // User is already using this review network
-            res.json({ error: true, message: 'You are already using this review network' });
-            return;
-        }
+                // Not using this network yet, add to table
+                con.query('INSERT INTO review_networks (network_id, owner_id, link) VALUES (?, ?, ?)', [req.body.id, user_id, req.body.link], (err, results) => {
+                    if (err) throw err;
 
-        // Not using this network yet, add to table
-        con.query('INSERT INTO review_networks (network_id, owner_id, link) VALUES (?, ?, ?)', [req.body.id, req.session.user_id, req.body.link], (err, results) => {
-            if (err) throw err;
-
-            res.json({ error: false, message: 'Started using this review network' });
-        });
-    })
+                    res.json({ error: false, message: 'Started using this review network' });
+                });
+            })
+        })
+        .catch(() => {
+            res.sendStatus(401);
+        })
 })
 
 app.post('/remove-network', (req, res) => {
-    // Check if the user is logged in
-    if (typeof req.session.user_id === 'undefined') {
-        res.json({ error: true, message: 'You must be logged in first' });
-        return;
-    }
+    AuthCheck(req.headers.authorization)
+        .then((user_id) => {
+            // Check params
+            const check = [
+                req.body.id
+            ];
 
-    // Check params
-    const check = [
-        req.body.id
-    ];
+            if (check.includes(undefined)) {
+                res.json({ error: true, message: 'Please include all the required values' });
+                return;
+            }
 
-    if (check.includes(undefined)) {
-        res.json({ error: true, message: 'Please include all the required values' });
-        return;
-    }
+            // Remove from table if user is actually using the provided network id
+            con.query('DELETE FROM review_networks WHERE owner_id=? AND network_id=?', [user_id, req.body.id], (err, results) => {
+                if (err) throw err;
 
-    // Remove from table if user is actually using the provided network id
-    con.query('DELETE FROM review_networks WHERE owner_id=? AND network_id=?', [req.session.user_id, req.body.id], (err, results) => {
-        if (err) throw err;
-
-        res.json({ error: false, message: 'Stopped using this network' });
-    });
+                res.json({ error: false, message: 'Stopped using this network' });
+            });
+        })
+        .catch(() => {
+            res.sendStatus(401);
+        })
 })
 
 app.post('/load-sms', (req, res) => {
-    // Check if the user is logged in
-    if (typeof req.session.user_id === 'undefined') {
-        res.json({ error: true, message: 'You must be logged in first' });
-        return;
-    }
+    AuthCheck(req.headers.authorization)
+        .then((user_id) => {
+            // Get this user's sms message
+            con.query('SELECT sms_message FROM users WHERE users.id=?', [user_id], (err, results) => {
+                if (err) throw err;
 
-    // Get this user's sms message
-    con.query('SELECT sms_message FROM users WHERE users.id=?', [req.session.user_id], (err, results) => {
-        if (err) throw err;
-
-        res.json({
-            sms_message: results[0].sms_message
-        });
-        return;
-    });
+                res.json({
+                    sms_message: results[0].sms_message
+                });
+                return;
+            });
+        })
+        .catch(() => {
+            res.sendStatus(401);
+        })
 })
 
 app.post('/update-sms', (req, res) => {
-    // Check if the user is logged in
-    if (typeof req.session.user_id === 'undefined') {
-        res.json({ error: true, message: 'You must be logged in first' });
-        return;
-    }
+    AuthCheck(req.headers.authorization)
+        .then((user_id) => {
+            // Check params
+            const check = [
+                req.body.sms_message
+            ];
 
-    // Check params
-    const check = [
-        req.body.sms_message
-    ];
+            if (check.includes(undefined)) {
+                res.json({ error: true, message: 'Please include all the required values' });
+                return;
+            }
 
-    if (check.includes(undefined)) {
-        res.json({ error: true, message: 'Please include all the required values' });
-        return;
-    }
-
-    // Update the user's sms message with the one they sent
-    con.query('UPDATE users SET users.sms_message=? WHERE users.id=?', [req.body.sms_message, req.session.user_id], (err, results) => {
-        res.json({ error: false, message: 'Updated SMS message' });
-        return;
-    });
+            // Update the user's sms message with the one they sent
+            con.query('UPDATE users SET users.sms_message=? WHERE users.id=?', [req.body.sms_message, user_id], (err, results) => {
+                res.json({ error: false, message: 'Updated SMS message' });
+                return;
+            });
+        })
+        .catch(() => {
+            res.sendStatus(401);
+        })
 })
 
 app.post('/edit-companyname', (req, res) => {
-    // Check if the user is logged in
-    if (typeof req.session.user_id === 'undefined') {
-        res.json({ error: true, message: 'You must be logged in first' });
-        return;
-    }
+    AuthCheck(req.headers.authorization)
+        .then((user_id) => {
+            // Check params
+            const check = [
+                req.body.companyname
+            ];
 
-    // Check params
-    const check = [
-        req.body.companyname
-    ];
+            if (check.includes(undefined)) {
+                res.json({ error: true, message: 'Please include all the required values' });
+                return;
+            }
 
-    if (check.includes(undefined)) {
-        res.json({ error: true, message: 'Please include all the required values' });
-        return;
-    }
+            con.query('UPDATE users SET users.companyname=? WHERE users.id=?', [req.body.companyname, user_id], (err, results) => {
+                if (err) throw err;
 
-    con.query('UPDATE users SET users.companyname=? WHERE users.id=?', [req.body.companyname, req.session.user_id], (err, results) => {
-        if (err) throw err;
-
-        res.json({ error: false, message: 'Updated your company name' });
-        return;
-    });
+                res.json({ error: false, message: 'Updated your company name' });
+                return;
+            });
+        })
+        .catch(() => {
+            res.sendStatus(401);
+        })
 })
 
 app.post('/get-companyname', (req, res) => {
-    // Check if the user is logged in
-    if (typeof req.session.user_id === 'undefined') {
-        res.json({ error: true, message: 'You must be logged in first' });
-        return;
-    }
+    AuthCheck(req.headers.authorization)
+        .then((user_id) => {
+            // Get this user's company name
+            con.query('SELECT users.companyname FROM users WHERE users.id=?', [user_id], (err, results) => {
+                if (err) throw err;
 
-    // Get this user's company name
-    con.query('SELECT users.companyname FROM users WHERE users.id=?', [req.session.user_id], (err, results) => {
-        if (err) throw err;
-
-        res.json({ companyname: results[0].companyname });
-        return;
-    });
+                res.json({ companyname: results[0].companyname });
+                return;
+            });
+        })
+        .catch(() => {
+            res.sendStatus(401);
+        })
 })
-
-app.listen(8080, () => {
-    console.log('RepTree API running on port 8080')
-});
 
 app.post('/open-reminder', (req, res) => {
     // Called when a customer opens the link they were texted, will update the customer as having
@@ -568,54 +559,54 @@ app.post('/get-customer-info', (req, res) => {
 })
 
 app.post('/get-analytics', (req, res) => {
-    // total number of customers
-    // total reminders sent
-    // total reminders opened
+    AuthCheck(req.headers.authorization)
+        .then((user_id) => {
+            // Get this user's analytics
+            let totalCustomers = 0;
+            let remindersSent = 0;
+            let remindersOpened = 0;
 
-    // Check if the user is logged in
-    if (typeof req.session.user_id === 'undefined') {
-        res.json({ error: true, message: 'You must be logged in first' });
-        return;
-    }
-
-    // Get this user's analytics
-    let totalCustomers = 0;
-    let remindersSent = 0;
-    let remindersOpened = 0;
-
-    // Total Customers
-    con.query(`SELECT
+            // Total Customers
+            con.query(`SELECT
                 COUNT(*) AS c
                 FROM customers
                 WHERE
                 customers.owner_id=?
-                `, [req.session.user_id], (err, results) => {
-        if (err) throw err;
-
-        totalCustomers = Number(results[0].c);
-
-        // Total Reminders Sent
-        con.query('SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=? AND customers.reminder_sent=1', [req.session.user_id], (err, results) => {
-            if (err) throw err;
-
-            remindersSent = Number(results[0].c);
-
-            // Total Reminders Opened
-            con.query('SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=? AND customers.reminder_sent=1 AND customers.reminder_opened=1', [req.session.user_id], (err, results) => {
+                `, [user_id], (err, results) => {
                 if (err) throw err;
 
-                remindersOpened = Number(results[0].c);
+                totalCustomers = Number(results[0].c);
 
-                res.json({
-                    totalCustomers,
-                    remindersSent,
-                    remindersOpened
+                // Total Reminders Sent
+                con.query('SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=? AND customers.reminder_sent=1', [user_id], (err, results) => {
+                    if (err) throw err;
+
+                    remindersSent = Number(results[0].c);
+
+                    // Total Reminders Opened
+                    con.query('SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=? AND customers.reminder_sent=1 AND customers.reminder_opened=1', [user_id], (err, results) => {
+                        if (err) throw err;
+
+                        remindersOpened = Number(results[0].c);
+
+                        res.json({
+                            totalCustomers,
+                            remindersSent,
+                            remindersOpened
+                        });
+                        return;
+                    })
                 });
-                return;
-            })
-        });
-    });
+            });
+        })
+        .catch(() => {
+            res.sendStatus(401);
+        })
 })
+
+app.listen(8080, () => {
+    console.log('RepTree API running on port 8080')
+});
 
 // SMS check loop
 setInterval(() => {

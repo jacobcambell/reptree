@@ -28,14 +28,14 @@ const Login = () => {
         axios.post(process.env.REACT_APP_API_ENDPOINT + '/login', {
             email,
             password
-        }, { withCredentials: true })
+        }, { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } })
             .then((res) => {
                 if (res.data.error) {
                     setErrormessage(res.data.message);
                 }
                 else {
                     setSuccessmessage('Successfully logged in, redirecting...');
-                    sessionStorage.setItem('logged_in', 'true');
+                    localStorage.setItem('access_token', res.data.access_token);
 
                     setTimeout(() => {
                         history.push('/dashboard');

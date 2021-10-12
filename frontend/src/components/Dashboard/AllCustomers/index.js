@@ -14,7 +14,7 @@ const AllCustomers = () => {
     const handleCancel = (id) => {
         axios.post(process.env.REACT_APP_API_ENDPOINT + '/cancel-customer', {
             id
-        }, { withCredentials: true })
+        }, { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } })
             .then(res => {
                 getCustomers();
             })
@@ -23,7 +23,7 @@ const AllCustomers = () => {
     const getCustomers = () => {
         axios.post(process.env.REACT_APP_API_ENDPOINT + '/get-my-customers',
             {},
-            { withCredentials: true })
+            { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } })
             .then(res => {
                 setCustomers(res.data);
             })

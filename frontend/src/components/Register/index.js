@@ -38,15 +38,16 @@ const Register = () => {
             email,
             password,
             companyname
-        }, { withCredentials: true })
+        }, { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } })
             .then((res) => {
                 if (res.data.error) {
                     setErrormessage(res.data.message);
                 }
                 else {
-                    setSuccessmessage('Successfully created an account, redirecting to login page...');
+                    setSuccessmessage('Successfully created an account, redirecting to dashboard');
+                    localStorage.setItem('access_token', res.data.access_token);
                     setTimeout(() => {
-                        history.push('/login');
+                        history.push('/dashboard');
                     }, 1500);
                 }
             })
