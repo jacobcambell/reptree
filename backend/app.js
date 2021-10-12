@@ -81,7 +81,7 @@ app.post('/register', (req, res) => {
             if (err) throw err;
 
             // Get ID of this new user
-            con.query('SELECT users.id AS user_id FROM users WHERE email=?', [req.body.email], (err, results) => {
+            con.query('SELECT users.id FROM users WHERE email=?', [req.body.email], (err, results) => {
                 if (err) throw err;
 
                 // Make the user logged in right after registration
