@@ -21,7 +21,7 @@ const CreateCustomer = () => {
             name,
             phone,
             time
-        }, { withCredentials: true })
+        }, { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } })
             .then((res) => {
                 if (res.data.error) {
                     setErrorMsg(res.data.message);

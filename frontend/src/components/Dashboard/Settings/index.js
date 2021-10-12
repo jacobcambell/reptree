@@ -10,13 +10,13 @@ const Settings = () => {
 
     useEffect(() => {
         // Load the user's SMS message
-        axios.post(process.env.REACT_APP_API_ENDPOINT + '/load-sms', {}, { withCredentials: true })
+        axios.post(process.env.REACT_APP_API_ENDPOINT + '/load-sms', {}, { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } })
             .then(res => {
                 setSmsMessage(res.data.sms_message);
             })
 
         // Load the user's company name
-        axios.post(process.env.REACT_APP_API_ENDPOINT + '/get-companyname', {}, { withCredentials: true })
+        axios.post(process.env.REACT_APP_API_ENDPOINT + '/get-companyname', {}, { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } })
             .then(res => {
                 setCompanyName(res.data.companyname);
             })
@@ -25,7 +25,7 @@ const Settings = () => {
     const handleSMSUpdate = () => {
         axios.post(process.env.REACT_APP_API_ENDPOINT + '/update-sms', {
             sms_message: smsMessage
-        }, { withCredentials: true })
+        }, { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } })
             .then(res => {
                 if (!res.data.error) {
                     setSuccessSMSMsg(res.data.message);
@@ -36,7 +36,7 @@ const Settings = () => {
     const handleCompanyUpdate = () => {
         axios.post(process.env.REACT_APP_API_ENDPOINT + '/edit-companyname', {
             companyname: companyName
-        }, { withCredentials: true })
+        }, { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } })
             .then(res => {
                 if (!res.data.error) {
                     setSuccessCompanyMsg(res.data.message);

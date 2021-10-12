@@ -10,7 +10,7 @@ const Portal = () => {
     });
 
     useEffect(() => {
-        axios.post(process.env.REACT_APP_API_ENDPOINT + '/get-analytics', {}, { withCredentials: true })
+        axios.post(process.env.REACT_APP_API_ENDPOINT + '/get-analytics', {}, { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } })
             .then((res) => {
                 setAnalytics(res.data);
             })

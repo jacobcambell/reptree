@@ -25,7 +25,7 @@ const MyBrand = () => {
         axios.post(process.env.REACT_APP_API_ENDPOINT + '/use-network', {
             id: selectedNetworkId,
             link: link
-        }, { withCredentials: true })
+        }, { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } })
             .then(res => {
                 updateList();
             })
@@ -36,7 +36,7 @@ const MyBrand = () => {
     const handleRemove = (id) => {
         axios.post(process.env.REACT_APP_API_ENDPOINT + '/remove-network', {
             id
-        }, { withCredentials: true })
+        }, { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } })
             .then(res => {
                 updateList();
             })
@@ -44,13 +44,13 @@ const MyBrand = () => {
 
     const updateList = () => {
         // Grab all the review networks
-        axios.post(process.env.REACT_APP_API_ENDPOINT + '/get-all-review-networks', {}, { withCredentials: true })
+        axios.post(process.env.REACT_APP_API_ENDPOINT + '/get-all-review-networks', {}, { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } })
             .then(res => {
                 setAllNetworks(res.data);
             })
 
         // Grab all the review networks the user is actually using
-        axios.post(process.env.REACT_APP_API_ENDPOINT + '/get-my-review-networks', {}, { withCredentials: true })
+        axios.post(process.env.REACT_APP_API_ENDPOINT + '/get-my-review-networks', {}, { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } })
             .then(res => {
                 setMyNetworks(res.data);
             })
