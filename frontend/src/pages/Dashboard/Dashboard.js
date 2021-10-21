@@ -1,13 +1,13 @@
 import styles from './Dashboard.module.css';
 
-import CreateCustomer from './CreateCustomer';
-import MyBrand from './MyBrand';
-import Settings from './Settings';
-import AllCustomers from './AllCustomers';
-import Portal from './Portal';
+import CreateCustomer from './CreateCustomer/CreateCustomer';
+import MyBrand from './MyBrand/MyBrand';
+import Settings from './Settings/Settings';
+import AllCustomers from './AllCustomers/AllCustomers';
+import Portal from './Portal/Portal';
 import { useEffect } from 'react';
 import { useHistory, Route, Link } from 'react-router-dom';
-import Nav from './Nav';
+import Nav from './Nav/Nav';
 
 const Dashboard = () => {
 

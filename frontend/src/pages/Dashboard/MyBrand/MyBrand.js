@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import Popup from './Popup';
+import Popup from './Popup/Popup';
 
 const MyBrand = () => {
 

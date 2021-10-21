@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import MainNavbar from '../../components/MainNavbar/MainNavbar'
-import Jumbo from './Jumbo';
+import Jumbo from './Jumbo/Jumbo';
 
 const Home = () => {
     return (
