@@ -1,24 +1,20 @@
 import { BrowserRouter as Router, Route } from "react-router-dom";
-import Home from "./components/Home/";
-import Register from "./components/Register";
-import Login from './components/Login';
-import Dashboard from './components/Dashboard';
-import Navbar from './components/Navbar/';
-import Lander from './components/Lander';
+import Home from "./pages/Home";
+import Register from "./pages/Register";
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Lander from './pages/Lander';
 
 const App = () => {
   return (
     <Router>
       <Route exact path="/">
-        <Navbar></Navbar>
         <Home></Home>
       </Route>
       <Route exact path="/register">
-        <Navbar></Navbar>
         <Register></Register>
       </Route>
       <Route exact path="/login">
-        <Navbar></Navbar>
         <Login></Login>
       </Route>
       <Route path="/dashboard">
