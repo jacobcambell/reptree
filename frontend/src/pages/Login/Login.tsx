@@ -2,6 +2,7 @@ import { Link, useHistory } from 'react-router-dom';
 import { useState } from 'react';
 import axios from 'axios';
 import MainNavbar from '../../components/MainNavbar/MainNavbar'
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
 const Login = () => {
 
@@ -10,39 +11,23 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const [errormessage, setErrormessage] = useState(null);
-    const [successmessage, setSuccessmessage] = useState(null);
+    const [errormessage, setErrormessage] = useState<string | null>(null);
 
-    const handleForm = () => {
+    const handleForm = async () => {
         // Clear messages at the start of every form submit
         setErrormessage(null);
-        setSuccessmessage(null);
 
-        if (
-            email.length === 0 ||
-            password.length === 0
-        ) {
-            setErrormessage('Please fill out the entire form');
-            return;
-        }
 
-        axios.post(process.env.REACT_APP_API_ENDPOINT + '/login', {
-            email,
-            password
-        }, { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` } })
-            .then((res) => {
-                if (res.data.error) {
-                    setErrormessage(res.data.message);
-                }
-                else {
-                    setSuccessmessage('Successfully logged in, redirecting...');
-                    localStorage.setItem('access_token', res.data.access_token);
+        const auth = getAuth();
 
-                    setTimeout(() => {
-                        history.push('/dashboard');
-                    }, 1500);
-                }
+        try {
+            await signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
+                history.push('/dashboard');
             })
+        }
+        catch (e: any) {
+            setErrormessage(e.message);
+        }
     }
 
     return (
@@ -65,12 +50,6 @@ const Login = () => {
                                 (errormessage !== null) &&
                                 <div className="alert alert-danger" role="alert">
                                     {errormessage}
-                                </div>
-                            }
-                            {
-                                (successmessage !== null) &&
-                                <div className="alert alert-success" role="alert">
-                                    {successmessage}
                                 </div>
                             }
 
