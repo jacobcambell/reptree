@@ -6,18 +6,23 @@ import Settings from './Settings/Settings';
 import AllCustomers from './AllCustomers/AllCustomers';
 import Portal from './Portal/Portal';
 import { useEffect } from 'react';
-import { useHistory, Route, Link } from 'react-router-dom';
+import { useHistory, Route } from 'react-router-dom';
 import Nav from './Nav/Nav';
+import { auth } from '../../Firebase/config';
 
 const Dashboard = () => {
 
     const history = useHistory();
 
     useEffect(() => {
-        // Check if user has logged in status saved to their session
-        if (localStorage.getItem('access_token') === null) {
-            history.push('/login');
-        }
+        auth.currentUser?.getIdToken(true).then((idToken) => {
+            if (idToken === null) {
+                history.push('/');
+            }
+            else {
+                // User is logged in, send a ping to the server
+            }
+        });
     });
 
     return (
