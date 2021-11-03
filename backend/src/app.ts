@@ -19,7 +19,7 @@ const con = mysql.createConnection({
     host: process.env.MYSQL_DB_HOST,
     user: process.env.MYSQL_DB_USER,
     password: process.env.MYSQL_DB_PASSWORD,
-    database: 'reptree'
+    database: process.env.MYSQL_DB
 });
 
 con.connect();
@@ -32,37 +32,6 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(Express.json());
-
-// Firebase Initialization
-import * as firebaseAdmin from 'firebase-admin';
-let serviceAccount = require('../credentials/serviceAccountKey.json');
-firebaseAdmin.initializeApp({
-    credential: firebaseAdmin.credential.cert(serviceAccount)
-});
-
-app.post('/ping', async (req: Express.Request, res: Express.Response) => {
-    const check = [
-        req.body.idToken
-    ];
-
-    if (check.includes(undefined) || check.includes(null)) {
-        res.sendStatus(400);
-    }
-
-    let uid: string = '';
-
-    try {
-        await firebaseAdmin.auth().verifyIdToken(req.body.idToken).then((decodedToken) => {
-            uid = decodedToken.uid;
-        })
-    }
-    catch (e) {
-        res.sendStatus(400);
-    }
-
-    // We want to check if this uid exists in our users table
-
-})
 
 app.post('/register', (req, res) => {
     // Return json object with property "error", which will be either true or false
