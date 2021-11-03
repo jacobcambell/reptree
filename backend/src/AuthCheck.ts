@@ -19,4 +19,4 @@ const AuthCheck = (authorization) => {
     });
 }
 
-module.exports = AuthCheck;
+export { AuthCheck }

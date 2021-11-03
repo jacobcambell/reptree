@@ -12,7 +12,7 @@ const bitly = require('./bitly.js');
 
 const app = Express();
 const jwt = require('jsonwebtoken');
-const AuthCheck = require('./AuthCheck');
+import { AuthCheck } from './AuthCheck';
 
 const corsOptions = {
     origin: 'http://localhost:3000',
