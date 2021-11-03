@@ -113,58 +113,54 @@ app.post('/login', async (req, res) => {
     }
 })
 
-app.post('/create-customer', (req, res) => {
-    AuthCheck(req.headers.authorization)
-        .then((user_id) => {
-            // Check params
-            const check = [
-                req.body.name,
-                req.body.phone,
-                req.body.time
-            ];
+app.post('/create-customer', async (req, res) => {
+    let user_id;
 
-            if (check.includes(undefined)) {
-                res.json({ error: true, message: 'Please include all the required values' });
-                return;
-            }
+    try {
+        user_id = await AuthCheck(req.headers.authorization)
+    }
+    catch (e) {
 
-            // Name, phone and time should be more than 0 chars
-            if (
-                req.body.name.length === 0 ||
-                req.body.phone.length === 0 ||
-                req.body.time.length === 0
-            ) {
-                res.json({ error: true, message: 'Please enter a value in each field' });
-                return;
-            }
+    }
 
-            // Check user's sms balance
-            con.query('SELECT users.sms_balance FROM users WHERE users.id=?', [user_id], (err, results) => {
-                if (err) throw err;
+    // Check params
+    const check = [
+        req.body.name,
+        req.body.phone,
+        req.body.time
+    ];
 
-                if (results[0].sms_balance < 1) {
-                    // User cannot add this customer because their balance is too low
-                    res.json({ error: true, message: 'You cannot create this customer because your balance is too low.' });
-                    return;
-                }
+    if (check.includes(undefined)) {
+        res.json({ error: true, message: 'Please include all the required values' });
+        return;
+    }
 
-                // Create customer using the provided values
-                con.query('INSERT INTO customers (owner_id, name, phone, remind_time, reminder_sent, create_time) VALUES (?, ?, ?, NOW() + INTERVAL ? HOUR, 0, NOW())', [user_id, req.body.name, req.body.phone, req.body.time], (err, results) => {
-                    if (err) throw err;
+    // Name, phone and time should be more than 0 chars
+    if (
+        req.body.name.length === 0 ||
+        req.body.phone.length === 0 ||
+        req.body.time.length === 0
+    ) {
+        res.json({ error: true, message: 'Please enter a value in each field' });
+        return;
+    }
 
-                    // Subtract one from user's SMS balance
-                    con.query('UPDATE users SET sms_balance=(sms_balance - 1) WHERE users.id=?', [user_id], (err, results) => {
-                        if (err) throw err;
+    // Check user's sms balance
+    let results = await query('SELECT users.sms_balance FROM users WHERE users.id=?', [user_id])
 
-                        res.json({ error: false, message: 'Successfully created customer' });
-                        return;
-                    });
-                });
-            });
-        })
-        .catch(() => {
-            res.sendStatus(401);
-        })
+    if (results[0].sms_balance < 1) {
+        // User cannot add this customer because their balance is too low
+        res.json({ error: true, message: 'You cannot create this customer because your balance is too low.' });
+        return;
+    }
+
+    // Create customer using the provided values
+    await query('INSERT INTO customers (owner_id, name, phone, remind_time, reminder_sent, create_time) VALUES (?, ?, ?, NOW() + INTERVAL ? HOUR, 0, NOW())', [user_id, req.body.name, req.body.phone, req.body.time])
+
+    // Subtract one from user's SMS balance
+    await query('UPDATE users SET sms_balance=(sms_balance - 1) WHERE users.id=?', [user_id])
+
+    res.json({ error: false, message: 'Successfully created customer' });
 })
 
 app.post('/get-my-customers', async (req, res) => {
