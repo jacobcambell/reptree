@@ -167,27 +167,33 @@ app.post('/create-customer', (req, res) => {
         })
 })
 
-app.post('/get-my-customers', (req, res) => {
+app.post('/get-my-customers', async (req, res) => {
     AuthCheck(req.headers.authorization)
-        .then((user_id) => {
-            // Grab all customers belonging to this user by their id
-            con.query('SELECT id, name, phone, TIMESTAMPDIFF(MINUTE, NOW(), remind_time) AS time, reminder_sent FROM customers WHERE owner_id=? ORDER BY create_time DESC', [user_id], (err, results) => {
-                if (err) throw err;
+        .then(async (user_id) => {
 
-                let customers = [];
+            await query('SELECT id, name, phone, TIMESTAMPDIFF(MINUTE, NOW(), remind_time) AS time, reminder_sent FROM customers WHERE owner_id=? ORDER BY create_time DESC', [user_id]).then((data) => {
+                interface Customer {
+                    id: number,
+                    name: string,
+                    phone: string,
+                    time: number,
+                    reminder_sent: number
+                }
 
-                for (let i = 0; i < results.length; i++) {
+                let customers: Customer[] = [];
+
+                for (let i = 0; i < data.length; i++) {
                     customers.push({
-                        id: results[i].id,
-                        name: results[i].name,
-                        phone: results[i].phone,
-                        time: results[i].time,
-                        reminder_sent: results[i].reminder_sent
+                        id: data[i].id,
+                        name: data[i].name,
+                        phone: data[i].phone,
+                        time: data[i].time,
+                        reminder_sent: data[i].reminder_sent
                     });
                 }
 
                 res.json(customers);
-            });
+            })
         })
         .catch(() => {
             res.sendStatus(401);
