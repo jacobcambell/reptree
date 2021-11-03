@@ -1,33 +1,32 @@
 import { BrowserRouter as Router, Route } from "react-router-dom";
-import Home from "./components/Home/";
-import Register from "./components/Register";
-import Login from './components/Login';
-import Dashboard from './components/Dashboard';
-import Navbar from './components/Navbar/';
-import Lander from './components/Lander';
+import Home from "./pages/Home/Home";
+import Register from "./pages/Register/Register";
+import Login from './pages/Login/Login';
+import Dashboard from './pages/Dashboard/Dashboard';
+import Lander from './pages/Lander/Lander';
+import AuthContext from "./contexts/AuthContext";
 
 const App = () => {
   return (
-    <Router>
-      <Route exact path="/">
-        <Navbar></Navbar>
-        <Home></Home>
-      </Route>
-      <Route exact path="/register">
-        <Navbar></Navbar>
-        <Register></Register>
-      </Route>
-      <Route exact path="/login">
-        <Navbar></Navbar>
-        <Login></Login>
-      </Route>
-      <Route path="/dashboard">
-        <Dashboard></Dashboard>
-      </Route>
-      <Route path="/leave-review/:id">
-        <Lander></Lander>
-      </Route>
-    </Router>
+    <AuthContext>
+      <Router>
+        <Route exact path="/">
+          <Home></Home>
+        </Route>
+        <Route exact path="/register">
+          <Register></Register>
+        </Route>
+        <Route exact path="/login">
+          <Login></Login>
+        </Route>
+        <Route path="/dashboard">
+          <Dashboard></Dashboard>
+        </Route>
+        <Route path="/leave-review/:id">
+          <Lander></Lander>
+        </Route>
+      </Router>
+    </AuthContext>
   );
 }
 

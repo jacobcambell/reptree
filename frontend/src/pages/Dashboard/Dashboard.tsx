@@ -1,23 +1,37 @@
 import styles from './Dashboard.module.css';
 
-import CreateCustomer from './CreateCustomer';
-import MyBrand from './MyBrand';
-import Settings from './Settings';
-import AllCustomers from './AllCustomers';
-import Portal from './Portal';
+import CreateCustomer from './CreateCustomer/CreateCustomer';
+import MyBrand from './MyBrand/MyBrand';
+import Settings from './Settings/Settings';
+import AllCustomers from './AllCustomers/AllCustomers';
+import Portal from './Portal/Portal';
 import { useEffect } from 'react';
-import { useHistory, Route, Link } from 'react-router-dom';
-import Nav from './Nav';
+import { useHistory, Route } from 'react-router-dom';
+import Nav from './Nav/Nav';
+import { auth } from '../../Firebase/config';
+import axios from 'axios';
 
 const Dashboard = () => {
 
     const history = useHistory();
 
     useEffect(() => {
-        // Check if user has logged in status saved to their session
-        if (localStorage.getItem('access_token') === null) {
-            history.push('/login');
-        }
+        auth.currentUser?.getIdToken(true).then((idToken) => {
+            if (idToken === null) {
+                history.push('/');
+            }
+            else {
+                // User is logged in, send a ping to the server
+                axios.post(`${process.env.REACT_APP_API_ENDPOINT}/ping`, {
+                    idToken
+                }).then((e) => {
+                    console.log('posted')
+                })
+                    .catch(() => {
+                        alert('post error')
+                    })
+            }
+        });
     });
 
     return (

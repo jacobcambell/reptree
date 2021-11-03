@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
-import Jumbo from './Jumbo/';
+import MainNavbar from '../../components/MainNavbar/MainNavbar'
+import Jumbo from './Jumbo/Jumbo';
 
 const Home = () => {
     return (
         <div>
+            <MainNavbar></MainNavbar>
             <Jumbo></Jumbo>
 
             <div className="container my-5">
