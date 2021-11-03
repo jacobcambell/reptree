@@ -536,45 +536,33 @@ app.post('/get-customer-info', (req, res) => {
     });
 })
 
-app.post('/get-analytics', (req, res) => {
+app.post('/get-analytics', async (req, res) => {
     AuthCheck(req.headers.authorization)
-        .then((user_id) => {
+        .then(async (user_id) => {
             // Get this user's analytics
             let totalCustomers = 0;
             let remindersSent = 0;
             let remindersOpened = 0;
 
             // Total Customers
-            con.query(`SELECT
-                COUNT(*) AS c
-                FROM customers
-                WHERE
-                customers.owner_id=?
-                `, [user_id], (err, results) => {
-                if (err) throw err;
+            await query(`SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=?`, [user_id]).then((data) => {
+                totalCustomers = Number(data[0].c);
+            })
 
-                totalCustomers = Number(results[0].c);
+            // Reminders sent
+            await query('SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=? AND customers.reminder_sent=1', [user_id]).then((data) => {
+                remindersSent = Number(data[0].c);
+            })
 
-                // Total Reminders Sent
-                con.query('SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=? AND customers.reminder_sent=1', [user_id], (err, results) => {
-                    if (err) throw err;
+            // Reminders opened
+            await query('SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=? AND customers.reminder_sent=1 AND customers.reminder_opened=1', [user_id]).then((data) => {
+                remindersOpened = Number(data[0].c)
+            })
 
-                    remindersSent = Number(results[0].c);
-
-                    // Total Reminders Opened
-                    con.query('SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=? AND customers.reminder_sent=1 AND customers.reminder_opened=1', [user_id], (err, results) => {
-                        if (err) throw err;
-
-                        remindersOpened = Number(results[0].c);
-
-                        res.json({
-                            totalCustomers,
-                            remindersSent,
-                            remindersOpened
-                        });
-                        return;
-                    })
-                });
+            res.json({
+                totalCustomers,
+                remindersSent,
+                remindersOpened
             });
         })
         .catch(() => {
@@ -587,64 +575,60 @@ app.listen(PORT, () => {
 });
 
 // SMS check loop
-// setInterval(() => {
-//     con.query(`SELECT
-//     customers.id AS customer_id, customers.name, customers.phone,
-//     users.companyname, users.sms_message
-//     FROM customers, users
-//     WHERE customers.remind_time < NOW() AND
-//     customers.reminder_sent=0 AND
-//     users.id=customers.owner_id
-//     `, (err, results) => {
-//         if (err) throw err;
+setInterval(async () => {
+    let results = await query(`SELECT
+                                customers.id AS customer_id, customers.name, customers.phone,
+                                users.companyname, users.sms_message
+                                FROM customers, users
+                                WHERE customers.remind_time < NOW() AND
+                                customers.reminder_sent=0 AND
+                                users.id=customers.owner_id
+                                `)
 
-//         if (results.length === 0) {
-//             // No users to send texts to
-//             return;
-//         }
+    if (results.length === 0) {
+        // No users to send texts to
+        return;
+    }
 
-//         // Loop through all the customers we need to text
-//         for (let i = 0; i < results.length; i++) {
-//             // Build the SMS message from the user's settings
-//             let message = results[i].sms_message;
+    // Loop through all the customers we need to text
+    for (let i = 0; i < results.length; i++) {
+        // Build the SMS message from the user's settings
+        let message = results[i].sms_message;
 
-//             // Replace ((name)) with the customer's name
-//             message = message.replace('((name))', results[i].name);
+        // Replace ((name)) with the customer's name
+        message = message.replace('((name))', results[i].name);
 
-//             // Replace ((company)) with the user's company name
-//             message = message.replace('((company))', results[i].companyname);
+        // Replace ((company)) with the user's company name
+        message = message.replace('((company))', results[i].companyname);
 
-//             // Build review link
-//             let reviewLink = `${process.env.FRONTEND_BASEURL}/leave-review/${results[i].customer_id}`;
+        // Build review link
+        let reviewLink = `${process.env.FRONTEND_BASEURL}/leave-review/${results[i].customer_id}`;
 
-//             // Get Bitly short link
-//             let bitlyLink = bitly.createShortLink(reviewLink)
-//                 .then((link) => {
-//                     // Append Bitly link to end of message
-//                     message += ` ${link}`;
+        // Get Bitly short link
+        let bitlyLink = bitly.createShortLink(reviewLink)
+            .then((link) => {
+                // Append Bitly link to end of message
+                message += ` ${link}`;
 
-//                     // Text the customer
-//                     twilio_client.messages.create({
-//                         body: message,
-//                         to: results[i].phone, // Text this number
-//                         from: process.env.twilio_fromPhone, // From a valid Twilio number
-//                     })
-//                         .then(() => {
-//                             // Update the customer as having been sent the reminder
-//                             con.query('UPDATE customers SET reminder_sent=1 WHERE customers.id=?', [results[i].customer_id], (err, results) => {
-//                                 if (err) throw err;
-//                             });
-//                         })
-//                         .catch(e => {
-//                             console.log(e)
-//                         })
-//                 })
-//                 .catch(e => {
-//                     console.log(e)
-//                 })
-//         }
-//     });
-// }, 10000);
+                // Text the customer
+                twilio_client.messages.create({
+                    body: message,
+                    to: results[i].phone, // Text this number
+                    from: process.env.twilio_fromPhone, // From a valid Twilio number
+                })
+                    .then(async () => {
+                        // Update the customer as having been sent the reminder
+                        await query('UPDATE customers SET reminder_sent=1 WHERE customers.id=?', [results[i].customer_id])
+                    })
+                    .catch(e => {
+                        console.log(e)
+                    })
+            })
+            .catch(e => {
+                console.log(e)
+            })
+    }
+}, 10000);
 
 // From: https://stackoverflow.com/questions/46155/how-to-validate-an-email-address-in-javascript
 const validateEmail = (email) => {
