@@ -1,8 +1,9 @@
 require('dotenv').config();
 
-const express = require('express')
+import Express from 'express';
 const cors = require('cors');
 const mysql = require('mysql');
+const PORT = process.env.PORT || 4000;
 
 const twilio = require('twilio');
 const twilio_accountSid = process.env.twilio_accountSid;
@@ -10,7 +11,7 @@ const twilio_authToken = process.env.twilio_authToken;
 const twilio_client = new twilio(twilio_accountSid, twilio_authToken);
 const bitly = require('./bitly.js');
 
-const app = express();
+const app = Express();
 const jwt = require('jsonwebtoken');
 const AuthCheck = require('./AuthCheck');
 
@@ -30,7 +31,38 @@ const corsOptions = {
 }
 
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(Express.json());
+
+// Firebase Initialization
+import * as firebaseAdmin from 'firebase-admin';
+let serviceAccount = require('../credentials/serviceAccountKey.json');
+firebaseAdmin.initializeApp({
+    credential: firebaseAdmin.credential.cert(serviceAccount)
+});
+
+app.post('/ping', async (req: Express.Request, res: Express.Response) => {
+    const check = [
+        req.body.idToken
+    ];
+
+    if (check.includes(undefined) || check.includes(null)) {
+        res.sendStatus(400);
+    }
+
+    let uid: string = '';
+
+    try {
+        await firebaseAdmin.auth().verifyIdToken(req.body.idToken).then((decodedToken) => {
+            uid = decodedToken.uid;
+        })
+    }
+    catch (e) {
+        res.sendStatus(400);
+    }
+
+    // We want to check if this uid exists in our users table
+
+})
 
 app.post('/register', (req, res) => {
     // Return json object with property "error", which will be either true or false
@@ -605,7 +637,7 @@ app.post('/get-analytics', (req, res) => {
 })
 
 app.listen(8080, () => {
-    console.log('RepTree API running on port 8080')
+    console.log('RepTree API running on port ' + PORT)
 });
 
 // SMS check loop
@@ -637,10 +669,10 @@ setInterval(() => {
             message = message.replace('((company))', results[i].companyname);
 
             // Build review link
-            $reviewLink = `${process.env.FRONTEND_BASEURL}/leave-review/${results[i].customer_id}`;
+            let reviewLink = `${process.env.FRONTEND_BASEURL}/leave-review/${results[i].customer_id}`;
 
             // Get Bitly short link
-            $bitlyLink = bitly.createShortLink($reviewLink)
+            let bitlyLink = bitly.createShortLink(reviewLink)
                 .then((link) => {
                     // Append Bitly link to end of message
                     message += ` ${link}`;
