@@ -198,34 +198,32 @@ app.post('/get-my-customers', async (req, res) => {
     })
 })
 
-app.post('/cancel-customer', (req, res) => {
-    AuthCheck(req.headers.authorization)
-        .then((user_id) => {
-            // Check params
-            const check = [
-                req.body.id
-            ];
+app.post('/cancel-customer', async (req, res) => {
+    let user_id;
 
-            if (check.includes(undefined)) {
-                res.json({ error: true, message: 'Please include all the required values' });
-                return;
-            }
+    try {
+        user_id = await AuthCheck(req.headers.authorization)
+    }
+    catch (e) {
 
-            // Delete the customer from the database, if this user actually owns the id of the customer they sent and the reminder hasn't been sent yet
-            con.query('DELETE FROM customers WHERE id=? AND owner_id=? AND reminder_sent=0', [req.body.id, user_id], (err, results) => {
-                if (err) throw err;
+    }
 
-                // Add 1 to this user's sms balance since they deleted a customer
-                con.query('UPDATE users SET sms_balance=(sms_balance + 1) WHERE users.id=?', [user_id], (err, results) => {
-                    if (err) throw err;
+    const check = [
+        req.body.id
+    ];
 
-                    res.json({ error: false, message: 'Deleted customer' });
-                });
-            });
-        })
-        .catch(() => {
-            res.sendStatus(401);
-        })
+    if (check.includes(undefined)) {
+        res.json({ error: true, message: 'Please include all the required values' });
+        return;
+    }
+
+    // Delete the customer from the database, if this user actually owns the id of the customer they sent and the reminder hasn't been sent yet
+    let results = await query('DELETE FROM customers WHERE id=? AND owner_id=? AND reminder_sent=0', [req.body.id, user_id])
+
+    // Add 1 to this user's sms balance since they deleted a customer
+    await query('UPDATE users SET sms_balance=(sms_balance + 1) WHERE users.id=?', [user_id])
+
+    res.json({ error: false, message: 'Deleted customer' });
 })
 
 app.post('/get-all-review-networks', (req, res) => {
