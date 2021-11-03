@@ -226,137 +226,149 @@ app.post('/cancel-customer', async (req, res) => {
     res.json({ error: false, message: 'Deleted customer' });
 })
 
-app.post('/get-all-review-networks', (req, res) => {
-    AuthCheck(req.headers.authorization)
-        .then((user_id) => {
-            // Get a list of all the review networks, without any the user is currently using
-            con.query(`SELECT
-                        review_network_list.id AS id,
-                        review_network_list.name AS name,
-                        review_network_list.icon AS icon
-                        FROM review_network_list
-                        WHERE
-                        review_network_list.id NOT IN (
-                            SELECT review_networks.network_id FROM review_networks
-                            WHERE
-                            review_networks.owner_id=?
-                        )
-                        `,
-                [user_id],
-                (err, results) => {
-                    if (err) throw err;
+app.post('/get-all-review-networks', async (req, res) => {
+    let user_id;
 
-                    let networks = [];
+    try {
+        user_id = await AuthCheck(req.headers.authorization)
+    }
+    catch (e) {
 
-                    for (let i = 0; i < results.length; i++) {
-                        networks.push({
-                            id: results[i].id,
-                            name: results[i].name,
-                            icon: results[i].icon
-                        });
-                    }
+    }
 
-                    res.json(networks);
-                });
-        })
-        .catch(() => {
-            res.sendStatus(401);
-        })
+    // Get a list of all the review networks, without any the user is currently using
+    let results = await query(`SELECT
+                                review_network_list.id AS id,
+                                review_network_list.name AS name,
+                                review_network_list.icon AS icon
+                                FROM review_network_list
+                                WHERE
+                                review_network_list.id NOT IN (
+                                    SELECT review_networks.network_id FROM review_networks
+                                    WHERE
+                                    review_networks.owner_id=?
+                                )
+                                `, [user_id])
+    interface Network {
+        id: number;
+        name: string;
+        icon: string;
+    }
+
+    let networks: Network[] = [];
+
+    for (let i = 0; i < results.length; i++) {
+        networks.push({
+            id: results[i].id,
+            name: results[i].name,
+            icon: results[i].icon
+        });
+    }
+
+    res.json(networks);
+});
+
+app.post('/get-my-review-networks', async (req, res) => {
+    let user_id;
+
+    try {
+        user_id = await AuthCheck(req.headers.authorization)
+    }
+    catch (e) {
+
+    }
+
+    // Get a list of all the review networks belonging to the user
+    let results = await query(`SELECT
+                                review_network_list.id AS id,
+                                review_network_list.name AS name,
+                                review_network_list.icon AS icon,
+                                review_networks.link AS link
+                                FROM review_network_list, review_networks
+                                WHERE review_network_list.id=review_networks.network_id AND
+                                review_networks.owner_id=?` , [user_id])
+
+    interface Network {
+        id: number;
+        name: string;
+        icon: string;
+        link: string;
+    }
+
+    let networks: Network[] = [];
+
+    for (let i = 0; i < results.length; i++) {
+        networks.push({
+            id: results[i].id,
+            name: results[i].name,
+            icon: results[i].icon,
+            link: results[i].link
+        });
+    }
+
+    res.json(networks);
+});
+
+app.post('/use-network', async (req, res) => {
+    let user_id;
+
+    try {
+        user_id = await AuthCheck(req.headers.authorization)
+    }
+    catch (e) {
+
+    }
+
+    // Check params
+    const check = [
+        req.body.id,
+        req.body.link
+    ];
+
+    if (check.includes(undefined)) {
+        res.json({ error: true, message: 'Please include all the required values' });
+        return;
+    }
+
+    // Check if user is already using this review network
+    let results = await query('SELECT COUNT(*) AS c FROM review_networks WHERE owner_id=? AND network_id=?', [user_id, [req.body.id]])
+
+    if (results[0].c > 0) {
+        // User is already using this review network
+        res.json({ error: true, message: 'You are already using this review network' });
+        return;
+    }
+
+    // Not using this network yet, add to table
+    await query('INSERT INTO review_networks (network_id, owner_id, link) VALUES (?, ?, ?)', [req.body.id, user_id, req.body.link])
+
+    res.json({ error: false, message: 'Started using this review network' });
 })
 
-app.post('/get-my-review-networks', (req, res) => {
-    AuthCheck(req.headers.authorization)
-        .then((user_id) => {
-            // Get a list of all the review networks belonging to the user
-            con.query(`SELECT
-                        review_network_list.id AS id,
-                        review_network_list.name AS name,
-                        review_network_list.icon AS icon,
-                        review_networks.link AS link
-                        FROM review_network_list, review_networks
-                        WHERE review_network_list.id=review_networks.network_id AND
-                        review_networks.owner_id=?`,
-                [user_id],
-                (err, results) => {
-                    if (err) throw err;
+app.post('/remove-network', async (req, res) => {
+    let user_id;
 
-                    let networks = [];
+    try {
+        user_id = await AuthCheck(req.headers.authorization)
+    }
+    catch (e) {
 
-                    for (let i = 0; i < results.length; i++) {
-                        networks.push({
-                            id: results[i].id,
-                            name: results[i].name,
-                            icon: results[i].icon,
-                            link: results[i].link
-                        });
-                    }
+    }
 
-                    res.json(networks);
-                });
-        })
-        .catch(() => {
-            res.sendStatus(401);
-        })
-})
+    // Check params
+    const check = [
+        req.body.id
+    ];
 
-app.post('/use-network', (req, res) => {
-    AuthCheck(req.headers.authorization)
-        .then((user_id) => {
-            // Check params
-            const check = [
-                req.body.id,
-                req.body.link
-            ];
+    if (check.includes(undefined)) {
+        res.json({ error: true, message: 'Please include all the required values' });
+        return;
+    }
 
-            if (check.includes(undefined)) {
-                res.json({ error: true, message: 'Please include all the required values' });
-                return;
-            }
+    // Remove from table if user is actually using the provided network id
+    await query('DELETE FROM review_networks WHERE owner_id=? AND network_id=?', [user_id, req.body.id])
 
-            // Check if user is already using this review network
-            con.query('SELECT COUNT(*) AS c FROM review_networks WHERE owner_id=? AND network_id=?', [user_id, req.body.id], (err, results) => {
-                if (results[0].c > 0) {
-                    // User is already using this review network
-                    res.json({ error: true, message: 'You are already using this review network' });
-                    return;
-                }
-
-                // Not using this network yet, add to table
-                con.query('INSERT INTO review_networks (network_id, owner_id, link) VALUES (?, ?, ?)', [req.body.id, user_id, req.body.link], (err, results) => {
-                    if (err) throw err;
-
-                    res.json({ error: false, message: 'Started using this review network' });
-                });
-            })
-        })
-        .catch(() => {
-            res.sendStatus(401);
-        })
-})
-
-app.post('/remove-network', (req, res) => {
-    AuthCheck(req.headers.authorization)
-        .then((user_id) => {
-            // Check params
-            const check = [
-                req.body.id
-            ];
-
-            if (check.includes(undefined)) {
-                res.json({ error: true, message: 'Please include all the required values' });
-                return;
-            }
-
-            // Remove from table if user is actually using the provided network id
-            con.query('DELETE FROM review_networks WHERE owner_id=? AND network_id=?', [user_id, req.body.id], (err, results) => {
-                if (err) throw err;
-
-                res.json({ error: false, message: 'Stopped using this network' });
-            });
-        })
-        .catch(() => {
-            res.sendStatus(401);
-        })
+    res.json({ error: false, message: 'Stopped using this network' });
 })
 
 app.post('/load-sms', (req, res) => {
