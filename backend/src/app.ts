@@ -2,7 +2,6 @@ require('dotenv').config();
 
 import Express from 'express';
 const cors = require('cors');
-const mysql = require('mysql');
 const PORT = process.env.PORT || 4000;
 
 const twilio = require('twilio');
@@ -15,15 +14,6 @@ const app = Express();
 const jwt = require('jsonwebtoken');
 const AuthCheck = require('./AuthCheck');
 
-const con = mysql.createConnection({
-    host: process.env.MYSQL_DB_HOST,
-    user: process.env.MYSQL_DB_USER,
-    password: process.env.MYSQL_DB_PASSWORD,
-    database: process.env.MYSQL_DB
-});
-
-con.connect();
-
 const corsOptions = {
     origin: 'http://localhost:3000',
     optionsSuccessStatus: 200,
@@ -33,9 +23,9 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(Express.json());
 
-app.post('/register', (req, res) => {
-    // Return json object with property "error", which will be either true or false
+import { query } from './mysql';
 
+app.post('/register', async (req: Express.Request, res: Express.Response) => {
     // Check params
     const check = [
         req.body.email,
@@ -64,38 +54,29 @@ app.post('/register', (req, res) => {
         return;
     }
 
-    // Does the provided email exist in the database?
-    con.query('SELECT COUNT(*) AS c FROM users WHERE email=?', [req.body.email], (err, results) => {
-        if (err) throw err;
+    // Check if this email already exists
+    let count = await query('SELECT COUNT(*) AS c FROM users WHERE email=?', [req.body.email])
 
-        if (results[0].c > 0) {
-            // User with this email address already exists
-            res.json({ error: true, message: 'User with that email address already exists' });
-            return;
-        }
+    if (count[0].c > 0) {
+        res.json({ error: true, message: 'User with that email address already exists' });
+        return;
+    }
 
-        // Provided email doesn't exist, create it (account will have an SMS balance of 3 by default)
-        con.query(`INSERT INTO users
-                    (email, password, companyname, sms_balance, sms_message)
-                    VALUES (?, ?, ?, 3, "Hey ((name)), thanks for visiting ((company)). If you would like, please leave us a review")
-                    `, [req.body.email, req.body.password, req.body.companyname], (err, results) => {
-            if (err) throw err;
+    // Provided email doesn't exist, create it (account will have an SMS balance of 3 by default)
+    await query(`INSERT INTO users
+            (email, password, companyname, sms_balance, sms_message)
+            VALUES (?, ?, ?, 3, "Hey ((name)), thanks for visiting ((company)). If you would like, please leave us a review")
+            `, [req.body.email, req.body.password, req.body.companyname])
 
-            // Get ID of this new user
-            con.query('SELECT users.id FROM users WHERE email=?', [req.body.email], (err, results) => {
-                if (err) throw err;
+    // Get ID of the new user
+    let user = await query('SELECT users.id FROM users WHERE email=?', [req.body.email])
 
-                // Make the user logged in right after registration
-
-                const token = jwt.sign({ user_id: results[0].id }, process.env.JWT_SECRET);
-                res.json({ error: false, access_token: token });
-                return;
-            });
-        });
-    });
+    // Sign a JWT token for this new user, and send back to the client
+    const token = jwt.sign({ user_id: user[0].id }, process.env.JWT_SECRET);
+    res.json({ error: false, access_token: token });
 })
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
     // Return json object with property "error", which will be either true or false
 
     // Check params
@@ -118,22 +99,18 @@ app.post('/login', (req, res) => {
         return;
     }
 
-    // Validate login
-    con.query('SELECT password, id FROM users WHERE email=?', [req.body.email], (err, results) => {
-        if (err) throw err;
+    let user = await query('SELECT password, id FROM users WHERE email=?', [req.body.email])
 
-        if ((results.length === 0) || results[0].password !== req.body.password) {
-            // No user with that email found, or the password provided doesn't match
-            res.json({ error: true, message: 'Incorrect email or password' });
-            return;
-        }
-        else {
-            // Generate JSON Web Token for this user
-            const token = jwt.sign({ user_id: results[0].id }, process.env.JWT_SECRET);
-            res.json({ error: false, access_token: token });
-            return;
-        }
-    });
+    if (user.length === 0 || user[0].password !== req.body.password) {
+        res.json({ error: true, message: 'Incorrect email or password' });
+        return;
+    }
+    else {
+        // Generate JSON Web Token for this user
+        const token = jwt.sign({ user_id: user[0].id }, process.env.JWT_SECRET);
+        res.json({ error: false, access_token: token });
+        return;
+    }
 })
 
 app.post('/create-customer', (req, res) => {
@@ -605,69 +582,69 @@ app.post('/get-analytics', (req, res) => {
         })
 })
 
-app.listen(8080, () => {
+app.listen(PORT, () => {
     console.log('RepTree API running on port ' + PORT)
 });
 
 // SMS check loop
-setInterval(() => {
-    con.query(`SELECT
-    customers.id AS customer_id, customers.name, customers.phone,
-    users.companyname, users.sms_message
-    FROM customers, users
-    WHERE customers.remind_time < NOW() AND
-    customers.reminder_sent=0 AND
-    users.id=customers.owner_id
-    `, (err, results) => {
-        if (err) throw err;
+// setInterval(() => {
+//     con.query(`SELECT
+//     customers.id AS customer_id, customers.name, customers.phone,
+//     users.companyname, users.sms_message
+//     FROM customers, users
+//     WHERE customers.remind_time < NOW() AND
+//     customers.reminder_sent=0 AND
+//     users.id=customers.owner_id
+//     `, (err, results) => {
+//         if (err) throw err;
 
-        if (results.length === 0) {
-            // No users to send texts to
-            return;
-        }
+//         if (results.length === 0) {
+//             // No users to send texts to
+//             return;
+//         }
 
-        // Loop through all the customers we need to text
-        for (let i = 0; i < results.length; i++) {
-            // Build the SMS message from the user's settings
-            let message = results[i].sms_message;
+//         // Loop through all the customers we need to text
+//         for (let i = 0; i < results.length; i++) {
+//             // Build the SMS message from the user's settings
+//             let message = results[i].sms_message;
 
-            // Replace ((name)) with the customer's name
-            message = message.replace('((name))', results[i].name);
+//             // Replace ((name)) with the customer's name
+//             message = message.replace('((name))', results[i].name);
 
-            // Replace ((company)) with the user's company name
-            message = message.replace('((company))', results[i].companyname);
+//             // Replace ((company)) with the user's company name
+//             message = message.replace('((company))', results[i].companyname);
 
-            // Build review link
-            let reviewLink = `${process.env.FRONTEND_BASEURL}/leave-review/${results[i].customer_id}`;
+//             // Build review link
+//             let reviewLink = `${process.env.FRONTEND_BASEURL}/leave-review/${results[i].customer_id}`;
 
-            // Get Bitly short link
-            let bitlyLink = bitly.createShortLink(reviewLink)
-                .then((link) => {
-                    // Append Bitly link to end of message
-                    message += ` ${link}`;
+//             // Get Bitly short link
+//             let bitlyLink = bitly.createShortLink(reviewLink)
+//                 .then((link) => {
+//                     // Append Bitly link to end of message
+//                     message += ` ${link}`;
 
-                    // Text the customer
-                    twilio_client.messages.create({
-                        body: message,
-                        to: results[i].phone, // Text this number
-                        from: process.env.twilio_fromPhone, // From a valid Twilio number
-                    })
-                        .then(() => {
-                            // Update the customer as having been sent the reminder
-                            con.query('UPDATE customers SET reminder_sent=1 WHERE customers.id=?', [results[i].customer_id], (err, results) => {
-                                if (err) throw err;
-                            });
-                        })
-                        .catch(e => {
-                            console.log(e)
-                        })
-                })
-                .catch(e => {
-                    console.log(e)
-                })
-        }
-    });
-}, 10000);
+//                     // Text the customer
+//                     twilio_client.messages.create({
+//                         body: message,
+//                         to: results[i].phone, // Text this number
+//                         from: process.env.twilio_fromPhone, // From a valid Twilio number
+//                     })
+//                         .then(() => {
+//                             // Update the customer as having been sent the reminder
+//                             con.query('UPDATE customers SET reminder_sent=1 WHERE customers.id=?', [results[i].customer_id], (err, results) => {
+//                                 if (err) throw err;
+//                             });
+//                         })
+//                         .catch(e => {
+//                             console.log(e)
+//                         })
+//                 })
+//                 .catch(e => {
+//                     console.log(e)
+//                 })
+//         }
+//     });
+// }, 10000);
 
 // From: https://stackoverflow.com/questions/46155/how-to-validate-an-email-address-in-javascript
 const validateEmail = (email) => {

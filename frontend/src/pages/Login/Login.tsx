@@ -2,7 +2,6 @@ import { Link, useHistory } from 'react-router-dom';
 import { useState } from 'react';
 import axios from 'axios';
 import MainNavbar from '../../components/MainNavbar/MainNavbar'
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
 const Login = () => {
 
@@ -14,20 +13,21 @@ const Login = () => {
     const [errormessage, setErrormessage] = useState<string | null>(null);
 
     const handleForm = async () => {
-        // Clear messages at the start of every form submit
         setErrormessage(null);
 
+        axios.post(`${process.env.REACT_APP_API_ENDPOINT}/login`, {
+            email,
+            password
+        }).then((res) => {
+            if (res.data.error) {
+                setErrormessage(res.data.message)
+                return;
+            }
 
-        const auth = getAuth();
-
-        try {
-            await signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
-                history.push('/dashboard');
-            })
-        }
-        catch (e: any) {
-            setErrormessage(e.message);
-        }
+            localStorage.setItem('access_token', res.data.access_token)
+            history.push('/dashboard')
+        })
+            .catch(() => { })
     }
 
     return (

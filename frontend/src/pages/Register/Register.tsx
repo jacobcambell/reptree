@@ -2,7 +2,6 @@ import { Link, useHistory } from 'react-router-dom';
 import { useState } from 'react';
 import axios from 'axios';
 import MainNavbar from '../../components/MainNavbar/MainNavbar'
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 
 const Register = () => {
 
@@ -23,16 +22,21 @@ const Register = () => {
             return;
         }
 
-        const auth = getAuth();
-        try {
-            await createUserWithEmailAndPassword(auth, email, password).then(() => {
-                // Registration success, go to dashboard
-                history.push('/dashboard');
-            })
-        }
-        catch (e: any) {
-            setErrormessage(e.message);
-        }
+        axios.post(`${process.env.REACT_APP_API_ENDPOINT}/register`, {
+            email,
+            password,
+            companyname
+        }).then((res) => {
+            console.log(res.data)
+            if (res.data.error) {
+                setErrormessage(res.data.message)
+                return;
+            }
+
+            localStorage.setItem('access_token', res.data.access_token)
+            history.push('/dashboard')
+        })
+            .catch(() => { })
     }
 
     return (
