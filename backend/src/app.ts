@@ -168,36 +168,38 @@ app.post('/create-customer', (req, res) => {
 })
 
 app.post('/get-my-customers', async (req, res) => {
-    AuthCheck(req.headers.authorization)
-        .then(async (user_id) => {
+    let user_id;
 
-            await query('SELECT id, name, phone, TIMESTAMPDIFF(MINUTE, NOW(), remind_time) AS time, reminder_sent FROM customers WHERE owner_id=? ORDER BY create_time DESC', [user_id]).then((data) => {
-                interface Customer {
-                    id: number,
-                    name: string,
-                    phone: string,
-                    time: number,
-                    reminder_sent: number
-                }
+    try {
+        user_id = await AuthCheck(req.headers.authorization)
+    }
+    catch (e) {
 
-                let customers: Customer[] = [];
+    }
 
-                for (let i = 0; i < data.length; i++) {
-                    customers.push({
-                        id: data[i].id,
-                        name: data[i].name,
-                        phone: data[i].phone,
-                        time: data[i].time,
-                        reminder_sent: data[i].reminder_sent
-                    });
-                }
+    await query('SELECT id, name, phone, TIMESTAMPDIFF(MINUTE, NOW(), remind_time) AS time, reminder_sent FROM customers WHERE owner_id=? ORDER BY create_time DESC', [user_id]).then((data) => {
+        interface Customer {
+            id: number,
+            name: string,
+            phone: string,
+            time: number,
+            reminder_sent: number
+        }
 
-                res.json(customers);
-            })
-        })
-        .catch(() => {
-            res.sendStatus(401);
-        })
+        let customers: Customer[] = [];
+
+        for (let i = 0; i < data.length; i++) {
+            customers.push({
+                id: data[i].id,
+                name: data[i].name,
+                phone: data[i].phone,
+                time: data[i].time,
+                reminder_sent: data[i].reminder_sent
+            });
+        }
+
+        res.json(customers);
+    })
 })
 
 app.post('/cancel-customer', (req, res) => {
@@ -543,37 +545,40 @@ app.post('/get-customer-info', (req, res) => {
 })
 
 app.post('/get-analytics', async (req, res) => {
-    AuthCheck(req.headers.authorization)
-        .then(async (user_id) => {
-            // Get this user's analytics
-            let totalCustomers = 0;
-            let remindersSent = 0;
-            let remindersOpened = 0;
+    let user_id;
 
-            // Total Customers
-            await query(`SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=?`, [user_id]).then((data) => {
-                totalCustomers = Number(data[0].c);
-            })
+    try {
+        user_id = await AuthCheck(req.headers.authorization)
+    }
+    catch (e) {
 
-            // Reminders sent
-            await query('SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=? AND customers.reminder_sent=1', [user_id]).then((data) => {
-                remindersSent = Number(data[0].c);
-            })
+    }
 
-            // Reminders opened
-            await query('SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=? AND customers.reminder_sent=1 AND customers.reminder_opened=1', [user_id]).then((data) => {
-                remindersOpened = Number(data[0].c)
-            })
+    // Get this user's analytics
+    let totalCustomers = 0;
+    let remindersSent = 0;
+    let remindersOpened = 0;
 
-            res.json({
-                totalCustomers,
-                remindersSent,
-                remindersOpened
-            });
-        })
-        .catch(() => {
-            res.sendStatus(401);
-        })
+    // Total Customers
+    await query(`SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=?`, [user_id]).then((data) => {
+        totalCustomers = Number(data[0].c);
+    })
+
+    // Reminders sent
+    await query('SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=? AND customers.reminder_sent=1', [user_id]).then((data) => {
+        remindersSent = Number(data[0].c);
+    })
+
+    // Reminders opened
+    await query('SELECT COUNT(*) AS c FROM customers WHERE customers.owner_id=? AND customers.reminder_sent=1 AND customers.reminder_opened=1', [user_id]).then((data) => {
+        remindersOpened = Number(data[0].c)
+    })
+
+    res.json({
+        totalCustomers,
+        remindersSent,
+        remindersOpened
+    });
 })
 
 app.listen(PORT, () => {
