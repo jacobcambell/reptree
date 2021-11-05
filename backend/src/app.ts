@@ -3,6 +3,9 @@ require('dotenv').config();
 import Express from 'express';
 const cors = require('cors');
 const PORT = process.env.PORT || 4000;
+const https = require('https')
+const path = require('path')
+const fs = require('fs')
 
 const twilio = require('twilio');
 const twilio_accountSid = process.env.twilio_accountSid;
@@ -18,6 +21,10 @@ app.use(cors());
 app.use(Express.json());
 
 import { query } from './mysql';
+
+app.get('/', (req, res) => {
+    res.json({ message: 'RepTree API' })
+})
 
 app.post('/register', async (req: Express.Request, res: Express.Response) => {
     // Check params
@@ -576,9 +583,20 @@ app.post('/get-analytics', async (req, res) => {
     });
 })
 
-app.listen(PORT, () => {
-    console.log('RepTree API running on port ' + PORT)
-});
+if (process.env.NODE_ENV === 'production') {
+    https.createServer({
+        key: fs.readFileSync(process.env.SSL_PRIVATEKEY_PATH),
+        cert: fs.readFileSync(process.env.SSL_CERTIFICATE_PATH),
+        ca: fs.readFileSync(process.env.SSL_CHAIN_PATH)
+    }, app).listen(PORT, () => {
+        console.log('RepTree API (SSL) running on port ' + PORT)
+    })
+}
+else if (process.env.NODE_ENV === 'develop') {
+    app.listen(PORT, () => {
+        console.log('RepTree API running on port ' + PORT)
+    });
+}
 
 // SMS check loop
 setInterval(async () => {
