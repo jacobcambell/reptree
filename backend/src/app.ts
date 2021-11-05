@@ -413,45 +413,44 @@ app.post('/update-sms', async (req, res) => {
     res.json({ error: false, message: 'Updated SMS message' });
 })
 
-app.post('/edit-companyname', (req, res) => {
-    AuthCheck(req.headers.authorization)
-        .then((user_id) => {
-            // Check params
-            const check = [
-                req.body.companyname
-            ];
+app.post('/edit-companyname', async (req, res) => {
+    let user_id;
 
-            if (check.includes(undefined)) {
-                res.json({ error: true, message: 'Please include all the required values' });
-                return;
-            }
+    try {
+        user_id = await AuthCheck(req.headers.authorization)
+    }
+    catch (e) {
 
-            con.query('UPDATE users SET users.companyname=? WHERE users.id=?', [req.body.companyname, user_id], (err, results) => {
-                if (err) throw err;
+    }
 
-                res.json({ error: false, message: 'Updated your company name' });
-                return;
-            });
-        })
-        .catch(() => {
-            res.sendStatus(401);
-        })
+    // Check params
+    const check = [
+        req.body.companyname
+    ];
+
+    if (check.includes(undefined)) {
+        res.json({ error: true, message: 'Please include all the required values' });
+        return;
+    }
+
+    await query('UPDATE users SET users.companyname=? WHERE users.id=?', [req.body.companyname, user_id])
+
+    res.json({ error: false, message: 'Updated your company name' });
 })
 
-app.post('/get-companyname', (req, res) => {
-    AuthCheck(req.headers.authorization)
-        .then((user_id) => {
-            // Get this user's company name
-            con.query('SELECT users.companyname FROM users WHERE users.id=?', [user_id], (err, results) => {
-                if (err) throw err;
+app.post('/get-companyname', async (req, res) => {
+    let user_id;
 
-                res.json({ companyname: results[0].companyname });
-                return;
-            });
-        })
-        .catch(() => {
-            res.sendStatus(401);
-        })
+    try {
+        user_id = await AuthCheck(req.headers.authorization)
+    }
+    catch (e) {
+
+    }
+
+    let results = await query('SELECT users.companyname FROM users WHERE users.id=?', [user_id])
+
+    res.json({ companyname: results[0].companyname });
 })
 
 app.post('/open-reminder', (req, res) => {
