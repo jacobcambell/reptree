@@ -14,13 +14,7 @@ const app = Express();
 const jwt = require('jsonwebtoken');
 import { AuthCheck } from './AuthCheck';
 
-const corsOptions = {
-    origin: 'http://localhost:3000',
-    optionsSuccessStatus: 200,
-    credentials: true
-}
-
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(Express.json());
 
 import { query } from './mysql';
