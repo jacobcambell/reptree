@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import styles from './Jumbo.module.css';
+import styles from './Jumbo.module.scss';
 
 const Jumbo = () => {
     return (
