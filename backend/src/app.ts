@@ -371,46 +371,46 @@ app.post('/remove-network', async (req, res) => {
     res.json({ error: false, message: 'Stopped using this network' });
 })
 
-app.post('/load-sms', (req, res) => {
-    AuthCheck(req.headers.authorization)
-        .then((user_id) => {
-            // Get this user's sms message
-            con.query('SELECT sms_message FROM users WHERE users.id=?', [user_id], (err, results) => {
-                if (err) throw err;
+app.post('/load-sms', async (req, res) => {
+    let user_id;
 
-                res.json({
-                    sms_message: results[0].sms_message
-                });
-                return;
-            });
-        })
-        .catch(() => {
-            res.sendStatus(401);
-        })
+    try {
+        user_id = await AuthCheck(req.headers.authorization)
+    }
+    catch (e) {
+
+    }
+
+    let sms = await query('SELECT sms_message FROM users WHERE users.id=?', [user_id])
+
+    res.json({
+        sms_message: sms[0].sms_message
+    });
 })
 
-app.post('/update-sms', (req, res) => {
-    AuthCheck(req.headers.authorization)
-        .then((user_id) => {
-            // Check params
-            const check = [
-                req.body.sms_message
-            ];
+app.post('/update-sms', async (req, res) => {
+    let user_id;
 
-            if (check.includes(undefined)) {
-                res.json({ error: true, message: 'Please include all the required values' });
-                return;
-            }
+    try {
+        user_id = await AuthCheck(req.headers.authorization)
+    }
+    catch (e) {
 
-            // Update the user's sms message with the one they sent
-            con.query('UPDATE users SET users.sms_message=? WHERE users.id=?', [req.body.sms_message, user_id], (err, results) => {
-                res.json({ error: false, message: 'Updated SMS message' });
-                return;
-            });
-        })
-        .catch(() => {
-            res.sendStatus(401);
-        })
+    }
+
+    const check = [
+        req.body.sms_message
+    ];
+
+    if (check.includes(undefined)) {
+        res.json({ error: true, message: 'Please include all the required values' });
+        return;
+    }
+
+    // Update the user's sms message with the one they sent
+    await query('UPDATE users SET users.sms_message=? WHERE users.id=?', [req.body.sms_message, user_id])
+
+    res.json({ error: false, message: 'Updated SMS message' });
 })
 
 app.post('/edit-companyname', (req, res) => {
