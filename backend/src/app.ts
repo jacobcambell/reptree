@@ -592,7 +592,7 @@ if (process.env.NODE_ENV === 'production') {
         console.log('RepTree API (SSL) running on port ' + PORT)
     })
 }
-else if (process.env.NODE_ENV === 'develop') {
+else if (process.env.NODE_ENV === 'development') {
     app.listen(PORT, () => {
         console.log('RepTree API running on port ' + PORT)
     });
