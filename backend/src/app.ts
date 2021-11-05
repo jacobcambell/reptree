@@ -453,7 +453,7 @@ app.post('/get-companyname', async (req, res) => {
     res.json({ companyname: results[0].companyname });
 })
 
-app.post('/open-reminder', (req, res) => {
+app.post('/open-reminder', async (req, res) => {
     // Called when a customer opens the link they were texted, will update the customer as having
     // opened the link and update open time
 
@@ -468,15 +468,12 @@ app.post('/open-reminder', (req, res) => {
     }
 
     // Mark as opened - Note: currently there is no form of authentication, anyone could send a customer id and mark as opened
-    con.query('UPDATE customers SET reminder_opened=1, reminder_open_time=NOW() WHERE customers.id=?', [req.body.customer_id], (err, results) => {
-        if (err) throw err;
+    await query('UPDATE customers SET reminder_opened=1, reminder_open_time=NOW() WHERE customers.id=?', [req.body.customer_id])
 
-        res.json({ error: false, message: 'Marked as open' });
-        return;
-    });
+    res.json({ error: false, message: 'Marked as open' });
 })
 
-app.post('/list-review-networks', (req, res) => {
+app.post('/list-review-networks', async (req, res) => {
     // Gets a list of all the review network info and links that belong to the owner of the provided customer id
 
     // Check params
@@ -490,7 +487,7 @@ app.post('/list-review-networks', (req, res) => {
     }
 
     // Load all review network data
-    con.query(`SELECT
+    let results = await query(`SELECT
                 review_networks.link,
                 review_network_list.icon,
                 review_network_list.name
@@ -501,25 +498,27 @@ app.post('/list-review-networks', (req, res) => {
                 customers.owner_id=users.id AND
                 customers.id=? AND
                 review_networks.network_id=review_network_list.id
-    `, [req.body.customer_id], (err, results) => {
-        if (err) throw err;
+    `, [req.body.customer_id])
 
-        let review_networks = [];
+    interface ReviewNetwork {
+        link: string;
+        icon: string;
+        name: string;
+    }
+    let review_networks: ReviewNetwork[] = [];
 
-        for (let i = 0; i < results.length; i++) {
-            review_networks.push({
-                link: results[i].link,
-                icon: results[i].icon,
-                name: results[i].name
-            });
-        }
+    for (let i = 0; i < results.length; i++) {
+        review_networks.push({
+            link: results[i].link,
+            icon: results[i].icon,
+            name: results[i].name
+        });
+    }
 
-        res.json(review_networks);
-        return;
-    });
+    res.json(review_networks);
 })
 
-app.post('/get-customer-info', (req, res) => {
+app.post('/get-customer-info', async (req, res) => {
     // Check params
     const check = [
         req.body.customer_id
@@ -531,21 +530,18 @@ app.post('/get-customer-info', (req, res) => {
     }
 
     // Get this customer's information
-    con.query(`SELECT
+    let results = await query(`SELECT
                 customers.name,
                 users.companyname
                 FROM customers, users
                 WHERE
                 customers.owner_id=users.id AND
                 customers.id=?
-    `, [req.body.customer_id], (err, results) => {
-        if (err) throw err;
+    `, [req.body.customer_id])
 
-        res.json({
-            name: results[0].name,
-            companyname: results[0].companyname
-        });
-        return;
+    res.json({
+        name: results[0].name,
+        companyname: results[0].companyname
     });
 })
 
